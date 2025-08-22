@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:togoom/core/app.dart';
 
-import 'package:togoom/main.dart';
+import 'package:togoom/main.dart' hide TogoomApp;
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
