@@ -1,4 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:gif/gif.dart';
+import 'package:togoom/features/splash/presentation/start_page.dart';
+import 'dart:async';
+import 'home_page.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late GifController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Animation slide de gauche vers centre
+    _controller = GifController(vsync: this);
+    _controller.addStatusListener((status) {
+      if (status.isCompleted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Gif(
+          image: AssetImage("assets/img_gif/TOGOOM-1.gif"),
+          controller:
+              _controller, // if duration and fps is null, original gif fps will be used.
+          //fps: 30,
+          duration: const Duration(seconds: 5),
+          autostart: Autostart.no,
+          onFetchCompleted: () {
+            _controller.reset();
+            _controller.forward();
+          },
+        ),
+      ),
+    );
+  }
+}
+
+
+
+/*
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'home_page.dart';
 
@@ -55,51 +119,6 @@ class _SplashPageState extends State<SplashScreen>
             'assets/images/logos/togoom-logo.png',
             width: 500,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-
-
-
-
-
-/*import 'package:flutter/material.dart';
-
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Icon(
-              Icons.security,
-              size: 100,
-              color: Colors.deepPurple,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'TOGOOM Mobile',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Identification Biométrique Avancée',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ],
         ),
       ),
     );

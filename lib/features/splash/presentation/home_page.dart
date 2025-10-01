@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/splash/presentation/demo_page_one.dart';
 import 'package:togoom/features/splash/presentation/start_page.dart';
+import 'package:togoom/features/splash/presentation/start_page_two.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -131,26 +133,34 @@ class _HomePageState extends State<HomePage>
                         return Opacity(
                           opacity: _contentAnimation.value,
                           child: Transform.translate(
-                            offset: Offset(0, 20 * (1 - _contentAnimation.value)),
+                            offset: Offset(
+                              0,
+                              20 * (1 - _contentAnimation.value),
+                            ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 _buildFeatureItem(
-                                  iconPath: 'assets/icons/svg/security-password.svg',
+                                  iconPath:
+                                      'assets/icons/svg/security-password.svg',
                                   title: '100% Sécurisé',
-                                  subtitle: 'Vos données sont protégées avec un\nchiffrement de niveau bancaire',
+                                  subtitle:
+                                      'Vos données sont protégées avec un\nchiffrement de niveau bancaire',
                                 ),
                                 const SizedBox(height: 15),
                                 _buildFeatureItem(
                                   iconPath: 'assets/icons/svg/flash.svg',
                                   title: 'Rapide',
-                                  subtitle: 'Processus en quelques étapes, terminé en\nmoins de 5 minutes',
+                                  subtitle:
+                                      'Processus en quelques étapes, terminé en\nmoins de 5 minutes',
                                 ),
                                 const SizedBox(height: 15),
                                 _buildFeatureItem(
-                                  iconPath: 'assets/icons/svg/checkmark-badge-04.svg',
+                                  iconPath:
+                                      'assets/icons/svg/checkmark-badge-04.svg',
                                   title: 'Conforme',
-                                  subtitle: 'Conforme aux réglementations nationales et\ninternationales',
+                                  subtitle:
+                                      'Conforme aux réglementations nationales et\ninternationales',
                                 ),
                               ],
                             ),
@@ -173,6 +183,12 @@ class _HomePageState extends State<HomePage>
                           height: 50,
                           child: ElevatedButton(
                             onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const StartPageone(),
+                                ),
+                              );
                               HapticFeedback.lightImpact();
                             },
                             style: ElevatedButton.styleFrom(
@@ -232,7 +248,7 @@ class _HomePageState extends State<HomePage>
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

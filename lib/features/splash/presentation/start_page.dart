@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/splash/presentation/cryptographe_one.dart';
+import 'package:togoom/features/splash/presentation/face_capture.dart';
+import 'package:togoom/features/splash/presentation/footprints_capture.dart';
 import 'package:togoom/features/splash/presentation/identity_checks.dart';
+import 'package:togoom/features/splash/presentation/scanner_MRZ_final.dart';
 import 'package:togoom/features/splash/presentation/setting_page.dart';
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
 
-  final List<_FeatureItem> _features = const [
+final List<_FeatureItem> _features = const [
     _FeatureItem(
       title: "Traitement des documents d'identité",
       icon: "assets/icons/svg/google-doc.svg",
@@ -27,31 +31,31 @@ class StartPage extends StatelessWidget {
       icon: "assets/icons/svg/face-id.svg",
     ),
     _FeatureItem(
-      title: "Vérification de la paume",
+      title: "Vérification des empreintes",
       icon: "assets/icons/svg/fingerprint-scan.svg",
     ),
     _FeatureItem(
-      title: "Contrôle ICAO strict",
+      title: "Photo normes ICAO",
       icon: "assets/icons/svg/security-password-02.svg",
     ),
-    _FeatureItem(title: "MagnifEye liveness", icon: "assets/icons/svg/eye.svg"),
+    _FeatureItem(title: "Vérification liveness", icon: "assets/icons/svg/eye.svg"),
   ];
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         toolbarHeight: 90,
         centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12.0),
-          child: SvgPicture.asset(
-            "assets/images/logos/togoom-logo 1.svg",
-            height: 32,
-            width: 32,
+        leading: IconButton(
+          icon: Image.asset(
+            "assets/images/logos/togoom-logo 1(1).png",
+            width: 46,
+            height: 44,
           ),
+          onPressed: () {},
         ),
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -65,7 +69,7 @@ class StartPage extends StatelessWidget {
               ),
             ),
             Text(
-              "Outils d’intégration",
+              "Outils d'intégration",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -98,7 +102,7 @@ class StartPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Cas d’utilisations activés",
+              "Cas d'utilisations activés",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 16),
@@ -109,11 +113,45 @@ class StartPage extends StatelessWidget {
                   final feature = _features[index];
                   return GestureDetector(
                     onTap: () {
-                      if (feature.title == "Traitement des documents d'identité") {
+                      if (feature.title ==
+                          "Traitement des documents d'identité") {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const IdentityVerificationPage(),
+                            builder: (context) =>
+                                const IdentityVerificationPage(),
+                          ),
+                        );
+                      } else if (feature.title == "Traitement MRZ et NFC") {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ScannerMrzFinal(),
+                          ),
+                        );
+                      } else if (feature.title == "Créer un cryptographe") {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CryptoPage(),
+                          ),
+                        );
+                      } else if (feature.title == "Vérification faciale") {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FaceCaptureCamera(
+                              onFaceCaptured: (String imagePath) {
+                                print('Photo capturée : $imagePath');
+                              },
+                            ),
+                          ),
+                        );
+                      } else if (feature.title == "Vérification de la paume") {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CaptureFootprints(),
                           ),
                         );
                       }

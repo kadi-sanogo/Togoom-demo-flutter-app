@@ -1,9 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/check_liveliness_three.dart';
+import 'package:togoom/features/splash/presentation/face_capture_two.dart';
+import 'package:togoom/features/splash/presentation/face_capture_onee.dart';
 
 class LivenessPageTwo extends StatefulWidget {
-  const LivenessPageTwo({super.key});
+  final String? rectoImagePath;
+
+  const LivenessPageTwo({super.key, this.rectoImagePath});
 
   @override
   State<LivenessPageTwo> createState() => _LivenessCapturePageState();
@@ -17,7 +23,7 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4A5568),
+        backgroundColor: AppColors.primary,
         toolbarHeight: 120,
         centerTitle: true,
         title: const Column(
@@ -51,74 +57,84 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            const SizedBox(height: 40),
             
             const Text(
               'Vérification en cours',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.black,
               ),
               textAlign: TextAlign.center,
             ),
-            
-            const SizedBox(height: 8),
             
             const Text(
               'Gardez votre visage dans l\'ovale',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.black),
               textAlign: TextAlign.center,
             ),
-            
-            const SizedBox(height: 60),
-            
+            const SizedBox(height: 20),
             Expanded(
               child: Stack(
                 children: [
                   Center(
                     child: Container(
-                      width: 280,
-                      height: 350,
+                      width: 406,
+                      height: 453,
                       decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(140),
-                        border: Border.all(
-                          color: const Color(0xFF4A5568),
-                          width: 3,
-                        ),
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.camera_alt_outlined,
-                          size: 48,
-                          color: Colors.black54,
+                      child: Center(
+                        child: Container(
+                          width: 250,
+                          height: 348,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(128),
+                            border: Border.all(color: Colors.black, width: 3),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(128),
+                            child: widget.rectoImagePath != null
+                                ? Image.file(
+                                    File(widget.rectoImagePath!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : Center(
+                                    child: SvgPicture.asset(
+                                      'assets/icons/svg/camera-01.svg',
+                                      width: 48,
+                                      height: 48,
+                                    ),
+                                  ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  
                   Positioned(
-                    top: 100,
-                    right: 60,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Vérifié',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                    top: 16,
+                    right: 16,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Action pour vérifier
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Vérifier',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
@@ -126,21 +142,78 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
                 ],
               ),
             ),
-            
+            const SizedBox(height: 10),
+            Container(
+              width: 406,
+              height: 130,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Image.asset(
+                        'assets/icons/svg/clock-01.png',
+                        width: 20,
+                        height: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Instructions simples',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        _BulletItem(text: "Cadrez votre visage dans l'ovale qui apparaîtra"),
+                        _BulletItem(text: "Restez immobile pendant quelques secondes"),
+                        _BulletItem(text: "Le système détectera automatiquement votre vivacité"),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
             SizedBox(
-              width: double.infinity,
-              height: 56,
+              width: 406,
+              height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                     Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LivenessPageThree(),
-                          ),
-                        );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FaceCaptureTwoScreen(
+                        onFaceCaptured: (facePath) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LivenessPageThree(
+                                faceImagePath: facePath,
+                                versoImagePath: "chemin_vers_verso",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE85D1C),
+                  backgroundColor: AppColors.secondary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -148,19 +221,46 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
                   elevation: 0,
                 ),
                 child: const Text(
-                  'Continuer',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  'Capture du visage',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
-            
-            const SizedBox(height: 40),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BulletItem extends StatelessWidget {
+  final String text;
+  const _BulletItem({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 5,
+          height: 5,
+          margin: const EdgeInsets.only(top: 8, right: 8),
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            shape: BoxShape.circle,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

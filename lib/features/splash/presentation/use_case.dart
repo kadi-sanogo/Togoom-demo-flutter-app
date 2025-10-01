@@ -4,7 +4,6 @@ import 'package:togoom/core/theme/app_colors.dart';
 
 class UseCasePage extends StatefulWidget {
   const UseCasePage({super.key});
-
   @override
   State<UseCasePage> createState() => _SettingsPageState();
 }
@@ -14,7 +13,6 @@ class _SettingsPageState extends State<UseCasePage> {
   bool createCryptographer = true;
   bool mrzNfcProcessing = true;
   bool faceVerification = true;
-
   bool palmVerification = false;
   bool strictIcaoControl = false;
   bool magnifeyeLiveness = false;
@@ -77,7 +75,6 @@ class _SettingsPageState extends State<UseCasePage> {
                 ],
               ),
               const SizedBox(height: 12),
-
               UseCaseTile(
                 title: "Traitement des documents d'identité",
                 iconPath: "assets/icons/svg/google-doc.svg",
@@ -87,7 +84,7 @@ class _SettingsPageState extends State<UseCasePage> {
                     documentIdentityProcessing = value;
                   });
                 },
-                  switchScale: 1,
+                switchScale: 1,
               ),
               UseCaseTile(
                 title: "Créer un cryptographe",
@@ -98,7 +95,7 @@ class _SettingsPageState extends State<UseCasePage> {
                     createCryptographer = value;
                   });
                 },
-                  switchScale: 1,
+                switchScale: 1,
               ),
               UseCaseTile(
                 title: "Traitement MRZ et NFC",
@@ -109,7 +106,7 @@ class _SettingsPageState extends State<UseCasePage> {
                     mrzNfcProcessing = value;
                   });
                 },
-                  switchScale: 1,
+                switchScale: 1,
               ),
               UseCaseTile(
                 title: "Vérification faciale",
@@ -120,11 +117,9 @@ class _SettingsPageState extends State<UseCasePage> {
                     faceVerification = value;
                   });
                 },
-                 switchScale: 1,
+                switchScale: 1,
               ),
-
               const SizedBox(height: 24),
-
               Row(
                 children: [
                   const Text(
@@ -144,9 +139,8 @@ class _SettingsPageState extends State<UseCasePage> {
                 ],
               ),
               const SizedBox(height: 12),
-
               UseCaseTile(
-                title: "Vérification de la paume",
+                title: "Vérification des empreintes",
                 iconPath: "assets/icons/svg/fingerprint-scan.svg",
                 isActive: palmVerification,
                 onChanged: (value) {
@@ -154,10 +148,10 @@ class _SettingsPageState extends State<UseCasePage> {
                     palmVerification = value;
                   });
                 },
-                  switchScale: 1,
+                switchScale: 1,
               ),
               UseCaseTile(
-                title: "Contrôle ICAO strict",
+                title: "Photo normes ICAO",
                 iconPath: "assets/icons/svg/security-password-02.svg",
                 isActive: strictIcaoControl,
                 onChanged: (value) {
@@ -165,10 +159,10 @@ class _SettingsPageState extends State<UseCasePage> {
                     strictIcaoControl = value;
                   });
                 },
-                  switchScale: 1,
+                switchScale: 1,
               ),
               UseCaseTile(
-                title: "MagnifEye liveness",
+                title: "Vérification liveness",
                 iconPath: "assets/icons/svg/eye.svg",
                 isActive: magnifeyeLiveness,
                 onChanged: (value) {
@@ -176,7 +170,7 @@ class _SettingsPageState extends State<UseCasePage> {
                     magnifeyeLiveness = value;
                   });
                 },
-                  switchScale: 1,
+                switchScale: 1,
               ),
             ],
           ),
@@ -184,19 +178,24 @@ class _SettingsPageState extends State<UseCasePage> {
       ),
     );
   }
-}class UseCaseTile extends StatelessWidget {
+}
+
+class UseCaseTile extends StatelessWidget {
   final String title;
   final String iconPath;
   final bool isActive;
   final ValueChanged<bool> onChanged;
   final double switchScale;
+  final bool isDisabled;
+
   const UseCaseTile({
     super.key,
     required this.title,
     required this.iconPath,
     required this.isActive,
     required this.onChanged,
-    this.switchScale = 1.2, 
+    this.switchScale = 1.2,
+    this.isDisabled = false,
   });
 
   @override
@@ -205,7 +204,6 @@ class _SettingsPageState extends State<UseCasePage> {
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -228,7 +226,7 @@ class _SettingsPageState extends State<UseCasePage> {
             ),
           ),
           Transform.scale(
-            scale: switchScale,  
+            scale: switchScale,
             child: Switch(
               value: isActive,
               onChanged: onChanged,
@@ -237,6 +235,9 @@ class _SettingsPageState extends State<UseCasePage> {
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: Colors.grey[300],
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              // Supprime la bordure grise pour les switches désactivés
+              trackOutlineColor: MaterialStateProperty.all(Colors.transparent),
+              trackOutlineWidth: MaterialStateProperty.all(0.0),
             ),
           ),
         ],

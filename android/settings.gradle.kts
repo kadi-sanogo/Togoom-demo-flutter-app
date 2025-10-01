@@ -23,3 +23,17 @@ plugins {
 }
 
 include(":app")
+
+val pluginAndroidDir = rootDir.resolve("../airsnap_face_flutter_plugin/android").canonicalFile  
+
+include(":AirsnapFace")  
+project(":AirsnapFace").projectDir = pluginAndroidDir.resolve("AirsnapFace")  
+
+include(":AirsnapFaceUI")  
+project(":AirsnapFaceUI").projectDir = pluginAndroidDir.resolve("AirsnapFaceUI")  
+
+include(":Ncnn_CPP_20210720")  
+project(":Ncnn_CPP_20210720").projectDir = pluginAndroidDir.resolve("Ncnn_CPP_20210720")  
+
+include(":OpenCV_CPP_460")  
+project(":OpenCV_CPP_460").projectDir = pluginAndroidDir.resolve("OpenCV_CPP_460")

@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/check_final.dart';
 
 class LivenessPageThree extends StatelessWidget {
-  const LivenessPageThree ({super.key});
+  const LivenessPageThree({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4A5568),
+        backgroundColor: AppColors.primary,
         toolbarHeight: 120,
         centerTitle: true,
         title: const Column(
@@ -45,191 +45,106 @@ class LivenessPageThree extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            
-            
+            const SizedBox(height: 10),
+
             const Text(
               'Vérification captures & vivacité',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.black,
               ),
             ),
-            
-            const SizedBox(height: 8),
-            
             const Text(
               'Votre vivacité a été confirmée avec succès.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.black),
             ),
-            
-            const SizedBox(height: 40),
-            
-            const Text(
-              'Pièce d\'identité recto',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
+
+            const SizedBox(height: 20),
+
+            // Conteneur gris regroupant les deux cadres
             Container(
-              width: double.infinity,
-              height: 200,
+              width: 406,
+              height: 570,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue, width: 2),
-                color: const Color(0xFFF0F8FF),
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'RÉPUBLIQUE DE CÔTE D\'IVOIRE',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          width: 30,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 30,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Pièce d\'identité recto',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'CARTE NATIONALE D\'IDENTITÉ',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/images/ton_image.png', 
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('n° CI001470982'),
-                              Text('SPECIMEN'),
-                              SizedBox(height: 4),
-                              Text('SOULEYMANE N'),
-                              Text('SPECIMEN', style: TextStyle(color: Colors.red)),
-                              SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Text('24/09/1991 M 1,82'),
-                                  Spacer(),
-                                  Text('IVOIRIENNE'),
-                                ],
-                              ),
-                              Text('MAN (CIV)'),
-                            ],
-                          ),
-                        ),
-                      ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    'Visage réel',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
-                    const Spacer(),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('09/10/2030'),
-                        Text('632195'),
-                      ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 150,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
+                    child: const Center(
+                      child: Icon(Icons.person, size: 80, color: Colors.grey),
+                    ),
+                  ),
+                ],
               ),
             ),
-            
-            const SizedBox(height: 30),
-            
-            const Text(
-              'Visage réel',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            Container(
-              width: 150,
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.grey[200],
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.person,
-                  size: 80,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-            
+
             const SizedBox(height: 40),
-            
+
             SizedBox(
-              width: double.infinity,
-              height: 56,
+              width: 406,
+              height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                     Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const VerificationSuccessPage(),
-                          ),
-                        );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const VerificationSuccessPage(),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE85D1C),
+                  backgroundColor: AppColors.secondary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -238,10 +153,7 @@ class LivenessPageThree extends StatelessWidget {
                 ),
                 child: const Text(
                   'Valider',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -250,4 +162,190 @@ class LivenessPageThree extends StatelessWidget {
       ),
     );
   }
+}
+*/
+
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/splash/presentation/check_final.dart';
+
+class LivenessPageThree extends StatelessWidget {
+  final String faceImagePath;
+  final String versoImagePath;
+
+  const LivenessPageThree({
+    super.key,
+    required this.faceImagePath,
+    required this.versoImagePath,
+  });
+
+  @override
+  @override
+Widget build(BuildContext context) {
+  final screenHeight = MediaQuery.of(context).size.height;
+  final screenWidth = MediaQuery.of(context).size.width;
+
+  return Scaffold(
+    backgroundColor: Colors.white,
+    appBar: AppBar(
+      backgroundColor: AppColors.primary,
+      toolbarHeight: 120,
+      centerTitle: true,
+      title: const Column(
+        children: [
+          Text(
+            'TOGOOM',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              color: Colors.white,
+              letterSpacing: 1.2,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'Traitement des documents d\'identité',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white70,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+    ),
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const Text(
+              'Vérification captures & vivacité',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Votre vivacité a été confirmée avec succès.',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            const SizedBox(height: 16),
+
+            // Container principal avec les images
+            Flexible(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Pièce d\'identité recto',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(versoImagePath),
+                              width: screenWidth * 0.4,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Visage réel',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Container(
+                        width: screenWidth * 0.4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(faceImagePath),
+                              width: screenWidth * 0.4,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const VerificationSuccessPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Valider',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 }

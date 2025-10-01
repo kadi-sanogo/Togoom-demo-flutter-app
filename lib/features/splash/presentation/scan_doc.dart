@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:flutter_svg/svg.dart';
 import 'dart:io';
 
 import 'package:togoom/features/splash/presentation/check_liveliness_one.dart';
+import 'package:togoom/features/splash/presentation/check_liveliness_two.dart';
 
 class ScanPage extends StatelessWidget {
   final String? rectoImagePath;
@@ -51,8 +51,6 @@ class ScanPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 10),
-
             const Text(
               "Vérification des captures",
               style: TextStyle(
@@ -62,15 +60,12 @@ class ScanPage extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-
-            const SizedBox(height: 12),
-
             const Text(
               "Étape 3 sur 3",
               style: TextStyle(fontSize: 16, color: Colors.black54),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
 
             Container(
               width: double.infinity,
@@ -81,7 +76,7 @@ class ScanPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 10),
 
             _DocumentSection(
               title: "Recto du document",
@@ -92,7 +87,7 @@ class ScanPage extends StatelessWidget {
               },
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 10),
 
             _DocumentSection(
               title: "Verso du document",
@@ -113,7 +108,7 @@ class ScanPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const LivenessPageOne(),
+                      builder: (context) => const LivenessPageTwo(),
                     ),
                   );
                   print("Recto: $rectoImagePath");

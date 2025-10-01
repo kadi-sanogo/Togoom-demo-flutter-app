@@ -17,7 +17,7 @@ class IdentityVerificationPage extends StatelessWidget {
       icon: "assets/icons/svg/car-04.svg",
     ),
     _DocumentType(
-      title: "Titre de séjour",
+      title: "Carte de résidence",
       icon: "assets/icons/svg/student-card.svg",
     ),
   ];
@@ -78,7 +78,7 @@ class IdentityVerificationPage extends StatelessWidget {
               "Pour sécuriser votre compte et respecter la réglementation, nous devons vérifier votre identité.",
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.black54,
+                color: Colors.black,
                 height: 1.3,
               ),
               textAlign: TextAlign.center,
@@ -162,6 +162,7 @@ class IdentityVerificationPage extends StatelessWidget {
                 ],
               ),
             ),
+              const SizedBox(height: 20),
 
             SizedBox(
               width: 406,
@@ -188,10 +189,10 @@ class IdentityVerificationPage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 15),
             const Text(
               "Vos données sont sécurisées et ne seront utilisées que pour la vérification.",
-              style: TextStyle(fontSize: 12, color: Colors.black54),
+              style: TextStyle(fontSize: 12, color: Colors.black),
               textAlign: TextAlign.center,
             ),
           ],

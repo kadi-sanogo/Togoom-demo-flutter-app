@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/splash/presentation/scan_doc_verso.dart';
 
-class CameraScanScreen extends StatefulWidget {
-  const CameraScanScreen({super.key});
+class CustomCameraScreen extends StatefulWidget {
+  final Function(String imagePath) onImageCaptured;
+  final String documentType; 
+
+  const CustomCameraScreen({
+    super.key,
+    required this.onImageCaptured,
+    required this.documentType,
+  });
 
   @override
-  State<CameraScanScreen> createState() => _CameraScanScreenState();
+  State<CustomCameraScreen> createState() => _CustomCameraScreenState();
 }
 
-class _CameraScanScreenState extends State<CameraScanScreen> {
+class _CustomCameraScreenState extends State<CustomCameraScreen> {
   CameraController? _controller;
-  List<CameraDescription>? _cameras;
+  List<CameraDescription>? cameras;
   bool _isInitialized = false;
   bool _isCapturing = false;
 
@@ -24,26 +29,49 @@ class _CameraScanScreenState extends State<CameraScanScreen> {
   }
 
   Future<void> _initializeCamera() async {
-    try {
-      _cameras = await availableCameras();
-      if (_cameras != null && _cameras!.isNotEmpty) {
-        _controller = CameraController(
-          _cameras![0], 
-          ResolutionPreset.high,
-          enableAudio: false,
-        );
+    cameras = await availableCameras();
+    if (cameras!.isNotEmpty) {
+      _controller = CameraController(
+        cameras![0],
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
 
-        await _controller!.initialize();
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
-          });
-        }
+      await _controller!.initialize();
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
       }
-    } catch (e) {
-      print('Erreur lors de l\'initialisation de la caméra: $e');
     }
   }
+
+  Future<void> _capturePhoto() async {
+  if (_controller == null || !_controller!.value.isInitialized || _isCapturing) {
+    return;
+  }
+
+  setState(() {
+    _isCapturing = true;
+  });
+
+  try {
+    final XFile photo = await _controller!.takePicture();
+    // Envoie le chemin au parent, navigation gérée par le callback
+    widget.onImageCaptured(photo.path);
+    // <-- Supprimé Navigator.pop(context)
+  } catch (e) {
+    print('Erreur lors de la capture: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Erreur lors de la capture")),
+    );
+  } finally {
+    setState(() {
+      _isCapturing = false;
+    });
+  }
+}
+
 
   @override
   void dispose() {
@@ -51,289 +79,285 @@ class _CameraScanScreenState extends State<CameraScanScreen> {
     super.dispose();
   }
 
-  Future<void> _capturePhoto() async {
-    if (_controller == null || !_controller!.value.isInitialized || _isCapturing) {
-      return;
-    }
-
-    setState(() {
-      _isCapturing = true;
-    });
-
-    try {
-      final XFile photo = await _controller!.takePicture();
-      
-      print('Photo capturée: ${photo.path}');
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ScanDocVerso(),
-        ),
-      );
-    } catch (e) {
-      print('Erreur lors de la capture: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Erreur lors de la capture")),
-      );
-    } finally {
-      setState(() {
-        _isCapturing = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white, size: 28),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Scanner le recto',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: Stack(
         children: [
           // Aperçu de la caméra
-          if (_isInitialized && _controller != null)
-            Positioned.fill(
-              child: CameraPreview(_controller!),
-            )
-          else
-            const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
+          Positioned.fill(
+            child: CameraPreview(_controller!),
+          ),
 
-          if (_isInitialized)
-            Positioned.fill(
-              child: _buildCameraOverlay(),
+          // Overlay sombre avec cadre transparent
+          Positioned.fill(
+            child: CustomPaint(
+              painter: DocumentFramePainter(),
+              child: Container(),
             ),
+          ),
 
+          // En-tête
           Positioned(
-            bottom: 0,
+            top: 0,
             left: 0,
             right: 0,
-            child: _buildBottomControls(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCameraOverlay() {
-    return Container(
-      color: Colors.black.withOpacity(0.5),
-      child: Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 40),
-          child: AspectRatio(
-            aspectRatio: 1.6, 
             child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: AppColors.primary,
-                  width: 3,
-                ),
-                borderRadius: BorderRadius.circular(12),
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 16,
+                right: 16,
+                bottom: 16,
               ),
-              child: Stack(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: Row(
                 children: [
-                  Center(
-                    child: Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                    onPressed: () => Navigator.pop(context),
                   ),
-                  
-                  // Coins du cadre de scan
-                  ..._buildScanCorners(),
-                  
-                  Positioned(
-                    top: -50,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Placez votre pièce d\'identité dans le cadre',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.documentType == "recto" 
+                              ? "Capture du recto" 
+                              : "Capture du verso",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          "Positionnez votre document dans le cadre",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
 
-  List<Widget> _buildScanCorners() {
-    const double cornerSize = 30;
-    const double cornerThickness = 4;
-    
-    return [
-      Positioned(
-        top: -cornerThickness / 2,
-        left: -cornerThickness / 2,
-        child: Container(
-          width: cornerSize,
-          height: cornerSize,
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.secondary, width: cornerThickness),
-              left: BorderSide(color: AppColors.secondary, width: cornerThickness),
-            ),
-          ),
-        ),
-      ),
-      
-      // Coin supérieur droit
-      Positioned(
-        top: -cornerThickness / 2,
-        right: -cornerThickness / 2,
-        child: Container(
-          width: cornerSize,
-          height: cornerSize,
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.secondary, width: cornerThickness),
-              right: BorderSide(color: AppColors.secondary, width: cornerThickness),
-            ),
-          ),
-        ),
-      ),
-      
-      // Coin inférieur gauche
-      Positioned(
-        bottom: -cornerThickness / 2,
-        left: -cornerThickness / 2,
-        child: Container(
-          width: cornerSize,
-          height: cornerSize,
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.secondary, width: cornerThickness),
-              left: BorderSide(color: AppColors.secondary, width: cornerThickness),
-            ),
-          ),
-        ),
-      ),
-      
-      // Coin inférieur droit
-      Positioned(
-        bottom: -cornerThickness / 2,
-        right: -cornerThickness / 2,
-        child: Container(
-          width: cornerSize,
-          height: cornerSize,
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.secondary, width: cornerThickness),
-              right: BorderSide(color: AppColors.secondary, width: cornerThickness),
-            ),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  Widget _buildBottomControls() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            Colors.black.withOpacity(0.8),
-          ],
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Assurez-vous que votre document est bien visible et net',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
+          // Instructions au centre
+          Positioned(
+            left: 0,
+            right: 0,
+            top: MediaQuery.of(context).size.height * 0.15,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            GestureDetector(
-              onTap: _isCapturing ? null : _capturePhoto,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _isCapturing ? Colors.grey : AppColors.secondary,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 4,
-                  ),
+              child: Text(
+                widget.documentType == "recto"
+                    ? "Placez le recto de votre pièce d'identité\ndans le cadre ci-dessous"
+                    : "Placez le verso de votre pièce d'identité\ndans le cadre ci-dessous",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  height: 1.3,
                 ),
-                child: _isCapturing
-                    ? const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 3,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 35,
+              ),
+            ),
+          ),
+
+          // Boutons en bas
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 20,
+                top: 20,
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.8),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Espace vide pour équilibrer
+                  const SizedBox(width: 60),
+                  
+                  // Bouton de capture
+                  GestureDetector(
+                    onTap: _isCapturing ? null : _capturePhoto,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4),
+                        color: _isCapturing 
+                            ? Colors.grey.withOpacity(0.5)
+                            : AppColors.secondary,
                       ),
+                      child: _isCapturing
+                          ? const Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                    ),
+                  ),
+                  
+                  // Espace vide pour équilibrer
+                  const SizedBox(width: 60),
+                ],
               ),
             ),
-            
-            const SizedBox(height: 12),
-            
-            const Text(
-              'Appuyez pour capturer',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class DocumentFramePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Dimensions du cadre pour une pièce d'identité (ratio 1.586:1)
+    const double frameRatio = 1.586;
+    final double frameWidth = size.width * 0.8;
+    final double frameHeight = frameWidth / frameRatio;
+    
+    final double left = (size.width - frameWidth) / 2;
+    final double top = (size.height - frameHeight) / 2;
+
+    // Zone du cadre
+    final frameRect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
+
+    // Créer le path pour l'overlay avec trou
+    final overlayPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..addRRect(RRect.fromRectAndRadius(frameRect, const Radius.circular(12)))
+      ..fillType = PathFillType.evenOdd;
+
+    // Dessiner l'overlay sombre avec le trou transparent
+    final overlayPaint = Paint()
+      ..color = Colors.black.withOpacity(0.6);
+    
+    canvas.drawPath(overlayPath, overlayPaint);
+
+    // Dessiner les coins du cadre
+    final cornerPaint = Paint()
+      ..color = AppColors.secondary
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke;
+
+    final double cornerSize = 30;
+
+    // Coin supérieur gauche
+    canvas.drawLine(
+      Offset(left, top + cornerSize),
+      Offset(left, top + 12),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + 12, top),
+      Offset(left + cornerSize, top),
+      cornerPaint,
+    );
+
+    // Coin supérieur droit
+    canvas.drawLine(
+      Offset(left + frameWidth - cornerSize, top),
+      Offset(left + frameWidth - 12, top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + frameWidth, top + 12),
+      Offset(left + frameWidth, top + cornerSize),
+      cornerPaint,
+    );
+
+    // Coin inférieur gauche
+    canvas.drawLine(
+      Offset(left, top + frameHeight - cornerSize),
+      Offset(left, top + frameHeight - 12),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + 12, top + frameHeight),
+      Offset(left + cornerSize, top + frameHeight),
+      cornerPaint,
+    );
+
+    // Coin inférieur droit
+    canvas.drawLine(
+      Offset(left + frameWidth - cornerSize, top + frameHeight),
+      Offset(left + frameWidth - 12, top + frameHeight),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + frameWidth, top + frameHeight - 12),
+      Offset(left + frameWidth, top + frameHeight - cornerSize),
+      cornerPaint,
+    );
+
+    // Dessiner une bordure subtile autour du cadre
+    final borderPaint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(frameRect, const Radius.circular(12)),
+      borderPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/camera_scan.dart';
 import 'package:togoom/features/splash/presentation/scan_doc.dart';
 
 class ScanDocVerso extends StatelessWidget {
-  const ScanDocVerso({super.key});
+  final String? rectoImagePath;
+
+  const ScanDocVerso({super.key, this.rectoImagePath});
 
   @override
   Widget build(BuildContext context) {
@@ -39,9 +40,7 @@ class ScanDocVerso extends StatelessWidget {
           ],
         ),
         leading: Padding(
-          padding: const EdgeInsets.only(
-            top: 25,
-          ), 
+          padding: const EdgeInsets.only(top: 25),
           child: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
@@ -105,12 +104,11 @@ class ScanDocVerso extends StatelessWidget {
                 children: [
                   Container(
                     width: double.infinity,
-                    height: 180, 
+                    height: 180,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey[200]!, width: 12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-
                     child: Stack(
                       children: [
                         ..._buildCorners(),
@@ -125,22 +123,22 @@ class ScanDocVerso extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 25), 
+                  const SizedBox(height: 25),
                   SizedBox(
                     width: 406,
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () {},
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[200]!,
+                        backgroundColor: Colors.grey[100]!,
                         foregroundColor: Colors.black,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-
                       child: const Text(
-                        "Maintenant, capturez le verso de votre document",
+                        "Positionnez votre document dans le cadre",
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -148,29 +146,31 @@ class ScanDocVerso extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                 
                   SizedBox(
                     width: 406,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        final ImagePicker picker = ImagePicker();
-                        final XFile? image = await picker.pickImage(
-                          source: ImageSource.camera,
-                        );
-
-                        if (image != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ScanPage(),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CustomCameraScreen(
+                              documentType: "verso",
+                              onImageCaptured: (versoImagePath) {
+                                // Navigation automatique vers ScanPage avec les deux images
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ScanPage(
+                                      rectoImagePath: rectoImagePath,
+                                      versoImagePath: versoImagePath,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Capture annulée")),
-                          );
-                        }
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.secondary,

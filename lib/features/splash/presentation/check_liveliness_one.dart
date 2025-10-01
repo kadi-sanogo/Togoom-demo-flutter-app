@@ -10,7 +10,7 @@ class LivenessPageOne extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4A5568), 
+        backgroundColor: AppColors.primary, 
         toolbarHeight: 120,
         centerTitle: true,
         title: const Column(
@@ -45,37 +45,35 @@ class LivenessPageOne extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 10),
             
             const Text(
               'Vérification de vivacité',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
               textAlign: TextAlign.center,
             ),
             
-            const SizedBox(height: 16),
-            
             const Text(
               'Cette étape confirme que vous êtes bien une personne réelle.',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.black54,
-                height: 1.4,
+                color: Colors.black,
               ),
               textAlign: TextAlign.center,
             ),
             
-            const SizedBox(height: 60),
+            const SizedBox(height: 30),
             
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              width: 406,
+              height: 130,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
+                color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -83,20 +81,12 @@ class LivenessPageOne extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black54, width: 2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Colors.black54,
-                        ),
+                      Image.asset(
+                        'assets/icons/svg/clock-01.png',
+                        width: 20,
+                        height: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       const Text(
                         'Instructions simples',
                         style: TextStyle(
@@ -107,45 +97,38 @@ class LivenessPageOne extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _InstructionItem(
-                        text: "Cadrez votre visage dans l'ovale qui apparaîtra",
-                      ),
-                      SizedBox(height: 12),
-                      _InstructionItem(
-                        text: "Restez immobile pendant quelques secondes",
-                      ),
-                      SizedBox(height: 12),
-                      _InstructionItem(
-                        text: "Le système détectera automatiquement votre vivacité",
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  const Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _BulletItem(text: "Cadrez votre visage dans l'ovale qui apparaîtra"),
+                        _BulletItem(text: "Restez immobile pendant quelques secondes"),
+                        _BulletItem(text: "Le système détectera automatiquement votre vivacité"),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
             
-            const Spacer(),
+            const SizedBox(height: 20),
             
             SizedBox(
-              width: double.infinity,
-              height: 56,
+              width: 406,
+              height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                    Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LivenessPageTwo(),
-                          ),
-                        );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LivenessPageTwo(),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE85D1C), 
+                  backgroundColor: AppColors.secondary, 
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -161,8 +144,6 @@ class LivenessPageOne extends StatelessWidget {
                 ),
               ),
             ),
-            
-            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -170,12 +151,9 @@ class LivenessPageOne extends StatelessWidget {
   }
 }
 
-class _InstructionItem extends StatelessWidget {
+class _BulletItem extends StatelessWidget {
   final String text;
-  
-  const _InstructionItem({
-    required this.text,
-  });
+  const _BulletItem({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -183,11 +161,11 @@ class _InstructionItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 6,
-          height: 6,
-          margin: const EdgeInsets.only(top: 8, right: 12),
+          width: 5,
+          height: 5,
+          margin: const EdgeInsets.only(top: 8, right: 8),
           decoration: const BoxDecoration(
-            color: Colors.black54,
+            color: Colors.black,
             shape: BoxShape.circle,
           ),
         ),
@@ -195,9 +173,9 @@ class _InstructionItem extends StatelessWidget {
           child: Text(
             text,
             style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-              height: 1.4,
+              fontSize: 14,
+              color: Colors.black,
+              
             ),
           ),
         ),
