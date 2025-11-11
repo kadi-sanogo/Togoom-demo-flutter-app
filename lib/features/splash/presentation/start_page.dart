@@ -44,8 +44,6 @@ class StartPage extends StatelessWidget {
       title: "Vérification liveness",
       icon: "assets/icons/svg/eye.svg",
     ),
-    _FeatureItem(title: "Palm Vérification", icon: "assets/icons/svg/four-finger-03.svg"),
-    _FeatureItem(title: "Smile liveness", icon: "assets/icons/svg/smile.svg"),
     _FeatureItem(title: "Passive liveness", icon: "assets/icons/svg/activity-03.svg"),
     _FeatureItem(
       title: "Photo normes ICAO",
