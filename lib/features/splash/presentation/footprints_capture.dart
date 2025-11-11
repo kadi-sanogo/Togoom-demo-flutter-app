@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/footprints_capture_two.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class CaptureFootprints extends StatefulWidget {
   const CaptureFootprints({super.key});
@@ -12,7 +13,7 @@ class CaptureFootprints extends StatefulWidget {
 
 class _CaptureFootprintsState extends State<CaptureFootprints> {
   bool _dontShowAgain = false;
-
+  final lang = LanguageService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,8 +54,7 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            
-            // Titre principal
+
             const Text(
               'Capture de vos empreintes',
               style: TextStyle(
@@ -64,9 +64,9 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 10),
-            
+
             Container(
               width: 406,
               height: 268,
@@ -81,35 +81,34 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
                     iconAsset: 'assets/icons/svg/four-finger-02.svg',
                     text: 'Étendez et gardez les doigts ensemble',
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   _buildInstructionItem(
                     iconAsset: 'assets/icons/svg/camera-ai.svg',
                     text: 'Placez vos doigts devant la caméra',
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   _buildInstructionItem(
                     iconAsset: 'assets/icons/svg/2nd-bracket.svg',
                     text: "Restez immobile à l'intérieur du rectangle",
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   _buildInstructionItem(
                     iconAsset: 'assets/icons/svg/loading-02.svg',
-                    text: "Attendez la capture automatique (jusqu'à ce que le flash se déclenche)",
+                    text:
+                        "Attendez la capture automatique (jusqu'à ce que le flash se déclenche)",
                   ),
                 ],
               ),
             ),
-            
-       const SizedBox(height: 10),
 
-            
-            // Checkbox "Ne me le montrez plus"
+            const SizedBox(height: 10),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -118,7 +117,7 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.black,
-                     fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -140,26 +139,21 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: _dontShowAgain
-                        ? const Icon(
-                            Icons.check,
-                            size: 14,
-                            color: Colors.white,
-                          )
+                        ? const Icon(Icons.check, size: 14, color: Colors.white)
                         : null,
                   ),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
-            
-            // Bouton Sauter
+
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                     Navigator.push(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const FootprintsCaptureTwo(),
@@ -176,26 +170,19 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
                 ),
                 child: const Text(
                   'Commencer',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
-            // Message de sécurité
+
             const Text(
               'Vos données sont sécurisées et ne seront utilisées que pour la vérification d\'identité.',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.black,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.black),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 20),
           ],
         ),
@@ -210,11 +197,7 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SvgPicture.asset(
-          iconAsset,
-          width: 24,
-          height: 24,
-        ),
+        SvgPicture.asset(iconAsset, width: 24, height: 24),
         const SizedBox(width: 16),
         Expanded(
           child: Padding(

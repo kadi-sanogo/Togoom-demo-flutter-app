@@ -1,8 +1,9 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class FootprintsCaptureTwo extends StatefulWidget {
   const FootprintsCaptureTwo({super.key});
@@ -12,27 +13,18 @@ class FootprintsCaptureTwo extends StatefulWidget {
 }
 
 class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
+  final lang = LanguageService();
   CameraController? _cameraController;
   bool _showCamera = false;
   bool _isCameraInitialized = false;
-  String? _capturedImagePath;
-  
-  //Lite pour chaque empreinte et d liste pour élémentsd de deg fy hfb 
-  List<bool> _fingerprintVerified = [false, false, false, false, false];
-  int _currentFingerprintIndex = 0;
-  bool _isCapturingFingerprint = false;
-  bool _isScanning = false;
-  bool _isDetectingFinger = false;
-  bool _fingerDetected = false;
-  
-  // Noms des doigts pour l'affichage
-  List<String> _fingerNames = [
-    'Pouce',
-    'Index', 
-    'Majeur',
-    'Annulaire',
-    'Auriculaire'
-  ];
+
+  // États de détection
+  DetectionState _detectionState = DetectionState.waiting;
+  int _detectionProgress = 0;
+  Timer? _detectionTimer;
+  String _errorMessage = '';
+
+  List<bool> _fingersDetected = [false, false, false, false];
 
   @override
   void initState() {
@@ -43,162 +35,165 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
-      if (cameras.isNotEmpty) {
-        _cameraController = CameraController(
-          cameras.first,
-          ResolutionPreset.high,
-        );
-        await _cameraController!.initialize();
-        setState(() {
-          _isCameraInitialized = true;
-        });
+      if (cameras.isEmpty) return;
+
+      final backCamera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        backCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
+
+      await _cameraController!.initialize();
+      if (mounted) {
+        setState(() => _isCameraInitialized = true);
       }
     } catch (e) {
-      print('Erreur lors de l\'initialisation de la caméra: $e');
+      debugPrint("Erreur caméra : $e");
     }
   }
 
   void _openCamera() {
-    if (_isCameraInitialized && !_allFingerprintsVerified) {
-      setState(() {
-        _showCamera = true;
-        _isScanning = true;
-      });
-      // Démarrer le processus de scan automatique après un délai
-      _startAutomaticScanning();
-    }
+    if (!_isCameraInitialized || _showCamera) return;
+
+    setState(() {
+      _showCamera = true;
+      _detectionState = DetectionState.detecting;
+      _detectionProgress = 0;
+      _fingersDetected = [false, false, false, false];
+      _errorMessage = '';
+    });
+
+    _startDetection();
   }
-// close camer, demarrer 
+
   void _closeCamera() {
+    _detectionTimer?.cancel();
     setState(() {
       _showCamera = false;
-      _isScanning = false;
-      _isCapturingFingerprint = false;
-      _isDetectingFinger = false;
-      _fingerDetected = false;
+      _detectionState = DetectionState.waiting;
+      _detectionProgress = 0;
+      _fingersDetected = [false, false, false, false];
+      _errorMessage = '';
     });
   }
 
-  Future<void> _startAutomaticScanning() async {
-    // Attendre 2 secondes avant de commencer le premier scan
-    await Future.delayed(const Duration(seconds: 2));
-    
-    if (!_showCamera) return; // Si la caméra a été fermée, arrêter
-    
-    _scanNextFingerprint();
-  }
+  void _startDetection() {
+    _detectionTimer?.cancel();
 
-  Future<void> _scanNextFingerprint() async {
-    if (_currentFingerprintIndex >= _fingerprintVerified.length || !_showCamera) {
-      return;
-    }
-
-    // Phase 1: Détection du doigt.  phase de detection du doigt . détection du doigt , 
-
-    setState(() {
-      _isDetectingFinger = true;
-      _fingerDetected = false;
-    });
-
-    await Future.delayed(const Duration(milliseconds: 2000));
-    
-    if (!_showCamera) return;
-
-    // Vérifier si un objet est connecté ( detetion smiluaion )
-    bool fingerFound = await _simulateFingerDetection();
-    
-    if (!fingerFound) {
-      // Aucun objet detecté , 
-      setState(() {
-        _isDetectingFinger = false;
-      });
-      
-      await Future.delayed(const Duration(milliseconds: 1500));
-      if (_showCamera) {
-        _scanNextFingerprint(); 
+    _detectionTimer = Timer.periodic(const Duration(milliseconds: 300), (
+      timer,
+    ) {
+      if (!_showCamera || !mounted) {
+        timer.cancel();
+        return;
       }
-      return;
-    }
 
-    setState(() {
-      _fingerDetected = true;
-      _isDetectingFinger = false;
-      _isCapturingFingerprint = true;
-    });
-
-    await Future.delayed(const Duration(milliseconds: 2000));
-    
-    if (!_showCamera) return;
-
-    // Phase 3: Validation de la qualité de l'empreinte
-    bool fingerprintValid = await _simulateFingerprintValidation();
-    
-    if (!fingerprintValid) {
-     
       setState(() {
-        _isCapturingFingerprint = false;
-        _fingerDetected = false;
+        _detectionProgress++;
+
+        if (_detectionProgress == 2) {
+          _fingersDetected[0] = true;
+        } else if (_detectionProgress == 4) {
+          _fingersDetected[1] = true;
+        } else if (_detectionProgress == 6) {
+          _fingersDetected[2] = true;
+        } else if (_detectionProgress == 8) {
+          final random = DateTime.now().microsecondsSinceEpoch % 100;
+
+          if (random < 75) {
+            _fingersDetected[3] = true;
+            _detectionState = DetectionState.success;
+            timer.cancel();
+
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted && _showCamera) {
+                _closeCamera();
+                _showSuccessDialog();
+              }
+            });
+          } else {
+            _detectionState = DetectionState.error;
+            _errorMessage = _getRandomErrorMessage();
+            timer.cancel();
+
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted && _showCamera) {
+                _startDetection();
+              }
+            });
+          }
+        }
       });
-      
-      await Future.delayed(const Duration(milliseconds: 1000));
-      if (_showCamera) {
-        _scanNextFingerprint(); // Réessayer
-      }
-      return;
-    }
-
-    // Phase 4: Empreinte validée
-    setState(() {
-      _fingerprintVerified[_currentFingerprintIndex] = true;
-      _currentFingerprintIndex++;
-      _isCapturingFingerprint = false;
-      _fingerDetected = false;
     });
-
-    // Si toutes les empreintes ne sont pas encore scannées, continuer
-    if (_currentFingerprintIndex < _fingerprintVerified.length && _showCamera) {
-      await Future.delayed(const Duration(seconds: 1));
-      _scanNextFingerprint();
-    } else if (_allFingerprintsVerified) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      _closeCamera();
-    }
   }
 
-  // Simulation de la détection de doigt
-  Future<bool> _simulateFingerDetection() async {
-    // Simuler un délai de traitement d'image
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    // 85% de chance de détecter un doigt (simulation)
-    return DateTime.now().millisecondsSinceEpoch % 100 < 85;
+  String _getRandomErrorMessage() {
+    final errors = [
+      'Doigts non détectés',
+      'Maintenez vos doigts immobiles',
+      'Rapprochez vos doigts',
+      'Éloignez légèrement vos doigts',
+      'Luminosité insuffisante',
+    ];
+    final index = DateTime.now().microsecondsSinceEpoch % errors.length;
+    return errors[index];
   }
 
-  // Simulation de la validation de l'empreinte
-  Future<bool> _simulateFingerprintValidation() async {
-    // Simuler l'analyse de la qualité de l'empreinte
-    await Future.delayed(const Duration(milliseconds: 800));
-    
-    // 90% de chance que l'empreinte soit valide (simulation)
-    return DateTime.now().millisecondsSinceEpoch % 100 < 90;
-  }
-
-  void _onFingerprintTap() {
-    if (_currentFingerprintIndex < _fingerprintVerified.length) {
-      _openCamera();
-    }
-  }
-
-  void _validatePhoto() {
-    Navigator.pop(context);
-  }
-
-  bool get _allFingerprintsVerified {
-    return _fingerprintVerified.every((verified) => verified);
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 64,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Empreintes capturées !',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Vos empreintes digitales ont été enregistrées avec succès.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('Continuer'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _detectionTimer?.cancel();
     _cameraController?.dispose();
     super.dispose();
   }
@@ -238,434 +233,231 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Stack(
+      body: _showCamera && _isCameraInitialized
+          ? _buildCameraScreen()
+          : _buildInstructionScreen(),
+    );
+  }
+
+  Widget _buildInstructionScreen() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (!_showCamera) ...[
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 24),
-                    Text(
-                      _allFingerprintsVerified 
-                          ? 'Toutes les empreintes ont été capturées'
-                          : 'Placez vos 5 doigts devant la caméra',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // Container principal avec les empreintes
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          // Zone de vérification principale
-                          GestureDetector(
-                            onTap: _onFingerprintTap,
-                            child: Container(
-                              width: double.infinity,
-                              height: 400,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Center(
-                                    child: Container(
-                                      width: 280,
-                                      height: 350,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: const Color(0xFF87C5BA),
-                                          width: 3,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        color: Colors.grey[100],
-                                      ),
-                                      child: _allFingerprintsVerified
-                                          ? const Center(
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    Icons.check_circle,
-                                                    size: 60,
-                                                    color: Colors.green,
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                  Text(
-                                                    'Toutes les empreintes\nont été capturées',
-                                                    style: TextStyle(
-                                                      color: Colors.green,
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ],
-                                              ),
-                                            )
-                                          : Center(
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  SvgPicture.asset(
-                                                    "assets/icons/svg/three-finger-03.svg",
-                                                    width: 45,
-                                                    height: 45,
-                                                  ),
-                                                  const SizedBox(height: 16),
-                                                  const Text(
-                                                    'Appuyez pour commencer\nle scan des empreintes',
-                                                    style: TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 14,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  // Badge Vérifié
-                                  Positioned(
-                                    top: 16,
-                                    right: 16,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _allFingerprintsVerified 
-                                            ? Colors.green 
-                                            : const Color(0xFF87C5BA),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        _allFingerprintsVerified ? 'Terminé' : 'En attente',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          
-                          // Zone des empreintes digitales
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: List.generate(5, (index) {
-                                bool isVerified = _fingerprintVerified[index];
-                                bool isCurrent = index == _currentFingerprintIndex && !_allFingerprintsVerified;
-                                
-                                return Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: isCurrent 
-                                        ? Border.all(
-                                            color: const Color(0xFF87C5BA),
-                                            width: 2,
-                                          )
-                                        : null,
-                                  ),
-                                  child: SvgPicture.asset(
-                                    "assets/icons/svg/finger-print-check.svg",
-                                    width: 40,
-                                    height: 40,
-                                    color: isVerified 
-                                        ? Colors.green
-                                        : isCurrent
-                                            ? const Color(0xFF87C5BA)
-                                            : Colors.grey[400]!,
-                                  ),
-                                );
-                              }),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Bouton valider ,
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _allFingerprintsVerified ? _validatePhoto : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _allFingerprintsVerified 
-                              ? AppColors.secondary 
-                              : Colors.grey[400],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          'Valider ',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
+          const SizedBox(height: 60),
+          const Text(
+            'Placez vos 4 doigts devant la caméra',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
-          ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Index, majeur, annulaire et auriculaire',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          const SizedBox(height: 40),
 
-          // Interface caméra
-          if (_showCamera && _isCameraInitialized) ...[
-            Container(
-              width: double.infinity,
-              height: double.infinity,
+          // Le reste reste identique
+          GestureDetector(
+            onTap: _openCamera,
+            child: Container(
+              width: 300,
+              height: 400,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey, width: 2),
+              ),
               child: Stack(
                 children: [
-                  Positioned.fill(child: CameraPreview(_cameraController!)),
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 250,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.rectangle,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: _isCapturingFingerprint 
-                                  ? Colors.green 
-                                  : _isDetectingFinger
-                                      ? Colors.orange
-                                      : _fingerDetected
-                                          ? Colors.blue
-                                          : Colors.white, 
-                              width: 3
-                            ),
-                          ),
-                          child: _isDetectingFinger
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        CircularProgressIndicator(
-                                          color: Colors.orange,
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'Détection...',
-                                          style: TextStyle(
-                                            color: Colors.orange,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : _fingerDetected
-                                  ? Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Center(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.fingerprint,
-                                              color: Colors.blue,
-                                              size: 40,
-                                            ),
-                                            SizedBox(height: 8),
-                                            Text(
-                                              'Doigt détecté!',
-                                              style: TextStyle(
-                                                color: Colors.blue,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : _isCapturingFingerprint
-                                      ? Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.green.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: const Center(
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                CircularProgressIndicator(
-                                                  color: Colors.green,
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text(
-                                                  'Capture en cours...',
-                                                  style: TextStyle(
-                                                    color: Colors.green,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        )
-                                      : null,
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.fingerprint,
+                          size: 80,
+                          color: Colors.grey[400],
                         ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 50,
-                    left: 20,
-                    child: IconButton(
-                      onPressed: _closeCamera,
-                      icon: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 120,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: [
-                          Text(
-                            _isCapturingFingerprint
-                                ? 'Scan en cours...'
-                                : 'Placez vos 5 doigts dans le cadre',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          if (_currentFingerprintIndex < _fingerNames.length)
-                            Text(
-                              _isCapturingFingerprint
-                                  ? 'Capture: ${_fingerNames[_currentFingerprintIndex]}'
-                                  : 'Prochain: ${_fingerNames[_currentFingerprintIndex]}',
-                              style: TextStyle(
-                                color: _isCapturingFingerprint 
-                                    ? Colors.green 
-                                    : Colors.white70,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 100,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(5, (index) {
-                          bool isVerified = _fingerprintVerified[index];
-                          bool isCurrent = index == _currentFingerprintIndex;
-                          
-                          return Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isVerified 
-                                  ? Colors.green
-                                  : isCurrent && _isCapturingFingerprint
-                                      ? Colors.orange
-                                      : isCurrent
-                                          ? Colors.white
-                                          : Colors.white.withOpacity(0.3),
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2,
-                              ),
-                            ),
-                            child: Center(
-                              child: Icon(
-                                isVerified 
-                                    ? Icons.check
-                                    : Icons.fingerprint,
-                                color: isVerified 
-                                    ? Colors.white
-                                    : isCurrent
-                                        ? Colors.black
-                                        : Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Appuyez pour scanner',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildCameraScreen() {
+    return Stack(
+      children: [
+        Positioned.fill(child: CameraPreview(_cameraController!)),
+
+        Container(color: Colors.black.withOpacity(0.7)),
+
+        Center(
+          child: Container(
+            width: 300,
+            height: 500,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _getBorderColor(), width: 3),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Stack(
+                children: [
+                  if (_detectionState == DetectionState.success)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.green.withOpacity(0.3),
+                              Colors.green.withOpacity(0.5),
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.fingerprint,
+                            size: 120,
+                            color: Colors.green.withOpacity(0.8),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        Positioned(
+          bottom: 80,
+          left: 0,
+          right: 0,
+          child: Column(
+            children: [
+              Text(
+                _getStatusMessage(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _getStatusColor(),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (_detectionState == DetectionState.detecting)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16, left: 40, right: 40),
+                  child: LinearProgressIndicator(
+                    value: _detectionProgress / 8,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.yellow,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFingerIndicator(int index) {
+    final isDetected = _fingersDetected[index];
+    final isActive =
+        _detectionState == DetectionState.detecting &&
+        index <= _detectionProgress ~/ 2;
+
+    return Container(
+      width: 50,
+      height: 120,
+      decoration: BoxDecoration(
+        color: isDetected
+            ? Colors.green.withOpacity(0.3)
+            : isActive
+            ? Colors.yellow.withOpacity(0.3)
+            : Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: isDetected
+              ? Colors.green
+              : isActive
+              ? Colors.yellow
+              : Colors.white.withOpacity(0.5),
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: isDetected
+            ? const Icon(Icons.check, color: Colors.green, size: 30)
+            : isActive
+            ? const CircularProgressIndicator(
+                color: Colors.yellow,
+                strokeWidth: 2,
+              )
+            : null,
+      ),
+    );
+  }
+
+  Color _getBorderColor() {
+    switch (_detectionState) {
+      case DetectionState.success:
+        return Colors.green;
+      case DetectionState.error:
+        return Colors.red;
+      case DetectionState.detecting:
+        return Colors.yellow;
+      default:
+        return Colors.white;
+    }
+  }
+
+  Color _getStatusColor() {
+    switch (_detectionState) {
+      case DetectionState.success:
+        return Colors.green;
+      case DetectionState.error:
+        return Colors.red;
+      case DetectionState.detecting:
+        return Colors.yellow;
+      default:
+        return Colors.white;
+    }
+  }
+
+  String _getStatusMessage() {
+    switch (_detectionState) {
+      case DetectionState.success:
+        return '✅ Empreintes capturées !';
+      case DetectionState.error:
+        return '❌ $_errorMessage';
+      case DetectionState.detecting:
+        return 'Analyse en cours...';
+      default:
+        return 'Placez vos 4 doigts dans le cadre';
+    }
+  }
 }
+
+enum DetectionState { waiting, detecting, success, error }

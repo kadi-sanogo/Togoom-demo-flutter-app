@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class CustomCameraScreen extends StatefulWidget {
   final Function(String imagePath) onImageCaptured;
@@ -57,9 +58,7 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
 
   try {
     final XFile photo = await _controller!.takePicture();
-    // Envoie le chemin au parent, navigation gérée par le callback
     widget.onImageCaptured(photo.path);
-    // <-- Supprimé Navigator.pop(context)
   } catch (e) {
     print('Erreur lors de la capture: $e');
     ScaffoldMessenger.of(context).showSnackBar(
@@ -81,6 +80,7 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageService();
     if (!_isInitialized) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -99,7 +99,6 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
             child: CameraPreview(_controller!),
           ),
 
-          // Overlay sombre avec cadre transparent
           Positioned.fill(
             child: CustomPaint(
               painter: DocumentFramePainter(),
@@ -107,7 +106,6 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
             ),
           ),
 
-          // En-tête
           Positioned(
             top: 0,
             left: 0,
@@ -166,7 +164,6 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
             ),
           ),
 
-          // Instructions au centre
           Positioned(
             left: 0,
             right: 0,
@@ -192,7 +189,6 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
             ),
           ),
 
-          // Boutons en bas
           Positioned(
             bottom: 0,
             left: 0,
@@ -217,10 +213,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Espace vide pour équilibrer
                   const SizedBox(width: 60),
                   
-                  // Bouton de capture
                   GestureDetector(
                     onTap: _isCapturing ? null : _capturePhoto,
                     child: Container(
@@ -252,7 +246,6 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                     ),
                   ),
                   
-                  // Espace vide pour équilibrer
                   const SizedBox(width: 60),
                 ],
               ),
@@ -267,7 +260,6 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
 class DocumentFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // Dimensions du cadre pour une pièce d'identité (ratio 1.586:1)
     const double frameRatio = 1.586;
     final double frameWidth = size.width * 0.8;
     final double frameHeight = frameWidth / frameRatio;
@@ -278,19 +270,16 @@ class DocumentFramePainter extends CustomPainter {
     // Zone du cadre
     final frameRect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
 
-    // Créer le path pour l'overlay avec trou
     final overlayPath = Path()
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
       ..addRRect(RRect.fromRectAndRadius(frameRect, const Radius.circular(12)))
       ..fillType = PathFillType.evenOdd;
 
-    // Dessiner l'overlay sombre avec le trou transparent
     final overlayPaint = Paint()
       ..color = Colors.black.withOpacity(0.6);
     
     canvas.drawPath(overlayPath, overlayPaint);
 
-    // Dessiner les coins du cadre
     final cornerPaint = Paint()
       ..color = AppColors.secondary
       ..strokeWidth = 4
@@ -298,7 +287,7 @@ class DocumentFramePainter extends CustomPainter {
 
     final double cornerSize = 30;
 
-    // Coin supérieur gauche
+    //  supérieur gauche
     canvas.drawLine(
       Offset(left, top + cornerSize),
       Offset(left, top + 12),
@@ -310,7 +299,7 @@ class DocumentFramePainter extends CustomPainter {
       cornerPaint,
     );
 
-    // Coin supérieur droit
+    //  supérieur droit
     canvas.drawLine(
       Offset(left + frameWidth - cornerSize, top),
       Offset(left + frameWidth - 12, top),
@@ -322,7 +311,7 @@ class DocumentFramePainter extends CustomPainter {
       cornerPaint,
     );
 
-    // Coin inférieur gauche
+    //  inférieur gauche
     canvas.drawLine(
       Offset(left, top + frameHeight - cornerSize),
       Offset(left, top + frameHeight - 12),
@@ -334,7 +323,7 @@ class DocumentFramePainter extends CustomPainter {
       cornerPaint,
     );
 
-    // Coin inférieur droit
+    //  inférieur droit
     canvas.drawLine(
       Offset(left + frameWidth - cornerSize, top + frameHeight),
       Offset(left + frameWidth - 12, top + frameHeight),

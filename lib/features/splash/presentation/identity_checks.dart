@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/splash/presentation/scan_doc.dart';
 import 'package:togoom/features/splash/presentation/scan_doc_recto.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class IdentityVerificationPage extends StatelessWidget {
-  const IdentityVerificationPage({super.key});
+  IdentityVerificationPage({super.key});
+  final lang = LanguageService();
 
   final List<_DocumentType> _acceptedDocuments = const [
     _DocumentType(
@@ -76,11 +79,7 @@ class IdentityVerificationPage extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               "Pour sécuriser votre compte et respecter la réglementation, nous devons vérifier votre identité.",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black,
-                height: 1.3,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.black, height: 1.3),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -162,7 +161,7 @@ class IdentityVerificationPage extends StatelessWidget {
                 ],
               ),
             ),
-              const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             SizedBox(
               width: 406,
@@ -172,7 +171,23 @@ class IdentityVerificationPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ScanDocRecto(),
+                      builder: (context) => CustomCameraScreen(
+                        documentType: "recto",
+                        onImageCaptured: (String imagePath) {
+                          print("Recto capturé : $imagePath");
+
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ScanPage(
+                                rectoImagePath: imagePath,
+                                versoImagePath: null,
+                              ),
+                            ),
+                          );
+                        },
+                        requiresVerso: false,
+                      ),
                     ),
                   );
                 },

@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class FaceCaptureTwoScreen extends StatefulWidget {
   final Function(String imagePath) onFaceCaptured;
@@ -16,7 +17,7 @@ class _FaceCaptureTwoScreenState extends State<FaceCaptureTwoScreen> {
   List<CameraDescription>? cameras;
   bool _isInitialized = false;
   bool _isCapturing = false;
-
+final lang = LanguageService();
   @override
   void initState() {
     super.initState();

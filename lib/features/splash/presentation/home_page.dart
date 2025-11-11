@@ -5,6 +5,7 @@ import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/demo_page_one.dart';
 import 'package:togoom/features/splash/presentation/start_page.dart';
 import 'package:togoom/features/splash/presentation/start_page_two.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class _HomePageState extends State<HomePage>
   late AnimationController _animationController;
   late Animation<double> _logoAnimation;
   late Animation<double> _contentAnimation;
+  final lang = LanguageService();
 
   @override
   void initState() {
@@ -144,23 +146,20 @@ class _HomePageState extends State<HomePage>
                                   iconPath:
                                       'assets/icons/svg/security-password.svg',
                                   title: '100% Sécurisé',
-                                  subtitle:
-                                      'Vos données sont protégées avec un\nchiffrement de niveau bancaire',
+                                  subtitle: 'Vos données sont protégées ',
                                 ),
                                 const SizedBox(height: 15),
                                 _buildFeatureItem(
                                   iconPath: 'assets/icons/svg/flash.svg',
                                   title: 'Rapide',
-                                  subtitle:
-                                      'Processus en quelques étapes, terminé en\nmoins de 5 minutes',
+                                  subtitle: 'Simplicité en quelques minutes ',
                                 ),
                                 const SizedBox(height: 15),
                                 _buildFeatureItem(
                                   iconPath:
                                       'assets/icons/svg/checkmark-badge-04.svg',
                                   title: 'Conforme',
-                                  subtitle:
-                                      'Conforme aux réglementations nationales et\ninternationales',
+                                  subtitle: 'Respects réglementations ',
                                 ),
                               ],
                             ),
@@ -186,7 +185,7 @@ class _HomePageState extends State<HomePage>
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const StartPageone(),
+                                  builder: (context) => StartPageone(),
                                 ),
                               );
                               HapticFeedback.lightImpact();
@@ -219,7 +218,7 @@ class _HomePageState extends State<HomePage>
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const StartPage(),
+                                  builder: (context) => StartPage(),
                                 ),
                               );
                             },

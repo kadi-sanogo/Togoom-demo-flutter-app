@@ -2,11 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/scanner_MRZ_final.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class ScannerMrzTwo extends StatelessWidget {
-  final File imageFile; // ✅ attribut pour recevoir l'image
+  final File imageFile;
+  final lang = LanguageService();
 
-  const ScannerMrzTwo({super.key, required this.imageFile});
+  ScannerMrzTwo({super.key, required this.imageFile});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +68,6 @@ class ScannerMrzTwo extends StatelessWidget {
             ),
             const SizedBox(height: 30),
 
-            // Cadre avec bord et image
             Container(
               width: double.infinity,
               height: 180,
@@ -103,7 +104,6 @@ class ScannerMrzTwo extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            // Instructions
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -133,35 +133,36 @@ class ScannerMrzTwo extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-         SizedBox(
-  width: 406,
-  height: 50,
-  child: ElevatedButton(
-    onPressed: () {
-      Future.delayed(const Duration(seconds: 5), () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ScannerMrzFinal()),
-        );
-      });
-    },
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF9091AB),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-      ),
-    ),
-    child: const Text(
-      "Scanne en cours...",
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-      ),
-    ),
-  ),
-),
-
+            SizedBox(
+              width: 406,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Future.delayed(const Duration(seconds: 5), () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ScannerMrzFinal(),
+                      ),
+                    );
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9091AB),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  "Scanne en cours...",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
 
             const SizedBox(height: 20),
           ],

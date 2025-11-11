@@ -4,9 +4,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/scanner_MRZ_two.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class ScannerMrz extends StatelessWidget {
-  const ScannerMrz({super.key});
+   ScannerMrz({super.key});
+  final lang = LanguageService();
 
   Future<void> _openCamera(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
@@ -85,7 +87,6 @@ class ScannerMrz extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  // 👉 Cadre de prévisualisation
                   Container(
                     width: double.infinity,
                     height: 180,
@@ -109,7 +110,6 @@ class ScannerMrz extends StatelessWidget {
 
                   const SizedBox(height: 25),
 
-                  // 👉 Instructions
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -134,7 +134,6 @@ class ScannerMrz extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // 👉 Bouton
                   SizedBox(
                     width: 406,
                     height: 50,

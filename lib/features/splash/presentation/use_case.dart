@@ -235,7 +235,6 @@ class UseCaseTile extends StatelessWidget {
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: Colors.grey[300],
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              // Supprime la bordure grise pour les switches désactivés
               trackOutlineColor: MaterialStateProperty.all(Colors.transparent),
               trackOutlineWidth: MaterialStateProperty.all(0.0),
             ),

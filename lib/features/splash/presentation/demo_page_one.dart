@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class DemoPage extends StatefulWidget {
   const DemoPage({super.key});
@@ -10,6 +11,7 @@ class DemoPage extends StatefulWidget {
 }
 
 class _DemoPageState extends State<DemoPage> {
+  final lang = LanguageService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +44,6 @@ class _DemoPageState extends State<DemoPage> {
           children: [
             const SizedBox(height: 10),
 
-            // Titre principal avec icône à droite
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

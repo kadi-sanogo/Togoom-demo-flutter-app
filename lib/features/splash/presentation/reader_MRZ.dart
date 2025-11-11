@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/splash/presentation/check_liveliness_two.dart';
 import 'package:togoom/features/splash/presentation/scanner_MRZ.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class ReaderMrz extends StatelessWidget {
-  const ReaderMrz({super.key});
+   ReaderMrz({super.key});
+   
 
+  final lang = LanguageService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,7 +122,7 @@ class ReaderMrz extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ScannerMrz()),
+                    MaterialPageRoute(builder: (context) =>  ScannerMrz()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

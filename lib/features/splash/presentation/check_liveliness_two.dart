@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/check_liveliness_three.dart';
 import 'package:togoom/features/splash/presentation/face_capture_two.dart';
-import 'package:togoom/features/splash/presentation/face_capture_onee.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class LivenessPageTwo extends StatefulWidget {
   final String? rectoImagePath;
@@ -20,6 +20,7 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageService();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -57,7 +58,6 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            
             const Text(
               'Vérification en cours',
               style: TextStyle(
@@ -67,7 +67,7 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const Text(
               'Gardez votre visage dans l\'ovale',
               style: TextStyle(fontSize: 16, color: Colors.black),
@@ -116,9 +116,7 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
                     top: 16,
                     right: 16,
                     child: GestureDetector(
-                      onTap: () {
-                        // Action pour vérifier
-                      },
+                      onTap: () {},
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -178,9 +176,17 @@ class _LivenessCapturePageState extends State<LivenessPageTwo> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
-                        _BulletItem(text: "Cadrez votre visage dans l'ovale qui apparaîtra"),
-                        _BulletItem(text: "Restez immobile pendant quelques secondes"),
-                        _BulletItem(text: "Le système détectera automatiquement votre vivacité"),
+                        _BulletItem(
+                          text:
+                              "Cadrez votre visage dans l'ovale qui apparaîtra",
+                        ),
+                        _BulletItem(
+                          text: "Restez immobile pendant quelques secondes",
+                        ),
+                        _BulletItem(
+                          text:
+                              "Le système détectera automatiquement votre vivacité",
+                        ),
                       ],
                     ),
                   ),
@@ -254,10 +260,7 @@ class _BulletItem extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black),
           ),
         ),
       ],

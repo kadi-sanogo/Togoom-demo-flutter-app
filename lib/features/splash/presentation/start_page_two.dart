@@ -7,12 +7,12 @@ import 'package:togoom/features/splash/presentation/demo_page_one.dart';
 import 'package:togoom/features/splash/presentation/demo_page_two.dart';
 import 'package:togoom/features/splash/presentation/face_capture.dart';
 import 'package:togoom/features/splash/presentation/footprints_capture.dart';
-import 'package:togoom/features/splash/presentation/identity_checks.dart';
-import 'package:togoom/features/splash/presentation/scanner_MRZ_final.dart';
 import 'package:togoom/features/splash/presentation/setting_page.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class StartPageone extends StatelessWidget {
-  const StartPageone({super.key});
+   StartPageone({super.key});
+  final lang = LanguageService();
 
   final List<_FeatureItem> _features = const [
     _FeatureItem(
@@ -91,7 +91,7 @@ class StartPageone extends StatelessWidget {
               HapticFeedback.lightImpact();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
+                MaterialPageRoute(builder: (context) =>  SettingsPage()),
               );
             },
           ),

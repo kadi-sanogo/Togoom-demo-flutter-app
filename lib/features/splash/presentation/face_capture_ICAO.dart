@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/face_capture.dart';
 import 'package:togoom/features/splash/presentation/footprints_capture_two.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class FaceCaptureIcao extends StatefulWidget {
   const FaceCaptureIcao({super.key});
@@ -13,7 +14,7 @@ class FaceCaptureIcao extends StatefulWidget {
 
 class _FaceCaptureIcaoState extends State<FaceCaptureIcao> {
   bool _dontShowAgain = false;
-
+  final lang = LanguageService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +56,6 @@ class _FaceCaptureIcaoState extends State<FaceCaptureIcao> {
           children: [
             const SizedBox(height: 10),
 
-            // Titre principal
             const Text(
               'Capture de votre visage',
               style: TextStyle(
@@ -110,7 +110,6 @@ class _FaceCaptureIcaoState extends State<FaceCaptureIcao> {
 
             const SizedBox(height: 10),
 
-            
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -191,7 +190,6 @@ class _FaceCaptureIcaoState extends State<FaceCaptureIcao> {
 
             const SizedBox(height: 16),
 
-            
             const Text(
               'Vos données sont sécurisées et ne seront utilisées que pour la vérification d\'identité.',
               style: TextStyle(fontSize: 12, color: Colors.black),

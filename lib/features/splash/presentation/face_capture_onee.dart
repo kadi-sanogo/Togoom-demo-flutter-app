@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/face_capture_two.dart';
 import 'package:togoom/features/splash/presentation/face_verify.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class FaceCaptureScreenOne extends StatefulWidget {
   const FaceCaptureScreenOne({super.key});
@@ -14,7 +15,7 @@ class FaceCaptureScreenOne extends StatefulWidget {
 
 class _FaceCaptureScreenState extends State<FaceCaptureScreenOne> {
   String? _capturedImagePath;
-
+final lang = LanguageService();
   void _openFaceCaptureTwoScreen() async {
     final capturedPath = await Navigator.push(
       context,
@@ -34,15 +35,16 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreenOne> {
     }
   }
 
-  void _validatePhoto() {
+  void _validatePhoto() async {
     if (_capturedImagePath != null) {
+      final faceBytes = await File(_capturedImagePath!).readAsBytes();
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => VerificationSuccessPage(imagePath: '',
-           
+            builder: (context) => VerificationSuccessPage(
+              faceImage: faceBytes, imagePath: _capturedImagePath!, 
+            ),
           ),
-        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

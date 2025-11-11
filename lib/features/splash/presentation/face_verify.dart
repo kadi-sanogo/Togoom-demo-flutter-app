@@ -1,19 +1,23 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class VerificationSuccessPage extends StatelessWidget {
   final String imagePath;
-  
+
   const VerificationSuccessPage({
     super.key,
     required this.imagePath,
+    required Uint8List faceImage,
   });
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-
+    final lang = LanguageService();
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -98,7 +102,10 @@ class VerificationSuccessPage extends StatelessWidget {
                     top: 12,
                     right: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green,
                         borderRadius: BorderRadius.circular(25),
@@ -131,10 +138,7 @@ class VerificationSuccessPage extends StatelessWidget {
                   ),
                   child: const Text(
                     'Retour',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -152,41 +156,44 @@ class VerificationSuccessPage extends StatelessWidget {
       height: 125,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.green,
-          width: 4,
-        ),
+        border: Border.all(color: Colors.green, width: 4),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
       child: ClipOval(
         child: ColorFiltered(
           colorFilter: const ColorFilter.matrix([
-            1.5, 0, 0, 0, 50,
-            0, 1.5, 0, 0, 50,
-            0, 0, 1.5, 0, 50,
-            0, 0, 0, 1, 0,
+            1.5,
+            0,
+            0,
+            0,
+            50,
+            0,
+            1.5,
+            0,
+            0,
+            50,
+            0,
+            0,
+            1.5,
+            0,
+            50,
+            0,
+            0,
+            0,
+            1,
+            0,
           ]),
           child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.transparent,
-            ),
+            decoration: const BoxDecoration(color: Colors.transparent),
             child: Image.file(
               File(imagePath),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.person,
-                    size: 60,
-                    color: Colors.grey,
-                  ),
+                  child: const Icon(Icons.person, size: 60, color: Colors.grey),
                 );
               },
             ),

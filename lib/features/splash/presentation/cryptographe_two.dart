@@ -3,12 +3,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/cryptographe_three.dart';
 import 'package:togoom/features/splash/presentation/start_page.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class CryptographeTwo extends StatelessWidget {
   const CryptographeTwo({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageService();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -175,7 +177,6 @@ class CryptographeTwo extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Bouton Retour à l'accueil
                 Expanded(
                   child: SizedBox(
                     height: 50,
@@ -183,9 +184,7 @@ class CryptographeTwo extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const StartPage(),
-                          ),
+                          MaterialPageRoute(builder: (context) => StartPage()),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -209,18 +208,17 @@ class CryptographeTwo extends StatelessWidget {
 
                 const SizedBox(width: 12),
 
-                // Bouton Générer
                 Expanded(
                   child: SizedBox(
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () {
-                         Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CryptographeThree(),
-                    ),
-                  );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CryptographeThree(),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.secondary,
@@ -249,7 +247,6 @@ class CryptographeTwo extends StatelessWidget {
   }
 }
 
-// Info Item (dans une case blanche)
 class _InfoItem extends StatelessWidget {
   final String label;
   final String value;
@@ -299,5 +296,3 @@ class _InfoItem extends StatelessWidget {
     );
   }
 }
-
-

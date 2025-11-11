@@ -1,13 +1,15 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/camera_scan.dart';
 import 'package:togoom/features/splash/presentation/scan_doc.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class ScanDocVerso extends StatelessWidget {
   final String? rectoImagePath;
+  final lang = LanguageService();
 
-  const ScanDocVerso({super.key, this.rectoImagePath});
+   ScanDocVerso({super.key, this.rectoImagePath});
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +163,7 @@ class ScanDocVerso extends StatelessWidget {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ScanPage(
+                                    builder: (context) => ScanDocCombined(
                                       rectoImagePath: rectoImagePath,
                                       versoImagePath: versoImagePath,
                                     ),
@@ -260,4 +262,4 @@ class ScanDocVerso extends StatelessWidget {
       ),
     ];
   }
-}
+}*/

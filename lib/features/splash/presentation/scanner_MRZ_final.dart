@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/splash/presentation/cryptographe_three.dart';
 import 'package:togoom/features/splash/presentation/scanner_MRZ.dart';
 import 'package:togoom/features/splash/presentation/start_page.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class ScannerMrzFinal extends StatelessWidget {
-  const ScannerMrzFinal({super.key});
+  ScannerMrzFinal({super.key});
+  final lang = LanguageService();
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +64,6 @@ class ScannerMrzFinal extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Section Lecture MRZ réussie
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -88,11 +88,9 @@ class ScannerMrzFinal extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Informations en deux colonnes
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Colonne gauche
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,7 +107,6 @@ class ScannerMrzFinal extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // Colonne droite
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +133,6 @@ class ScannerMrzFinal extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Conteneur blanc pour les validation checks
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
@@ -153,7 +149,6 @@ class ScannerMrzFinal extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        // Validation checks
                         Row(
                           children: [
                             Image.asset(
@@ -202,7 +197,6 @@ class ScannerMrzFinal extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Bouton Scanner à nouveau
                 Expanded(
                   child: SizedBox(
                     height: 50,
@@ -210,9 +204,7 @@ class ScannerMrzFinal extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const ScannerMrz(),
-                          ),
+                          MaterialPageRoute(builder: (context) => ScannerMrz()),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -236,7 +228,6 @@ class ScannerMrzFinal extends StatelessWidget {
 
                 const SizedBox(width: 12),
 
-                // Bouton Continuer
                 Expanded(
                   child: SizedBox(
                     height: 50,
@@ -244,9 +235,7 @@ class ScannerMrzFinal extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const StartPage(),
-                          ),
+                          MaterialPageRoute(builder: (context) => StartPage()),
                         );
                       },
                       style: ElevatedButton.styleFrom(

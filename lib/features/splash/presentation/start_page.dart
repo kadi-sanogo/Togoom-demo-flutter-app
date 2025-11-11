@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/splash/presentation/capture_mrz_one.dart';
+import 'package:togoom/features/splash/presentation/capture_recto_piece.dart';
 import 'package:togoom/features/splash/presentation/cryptographe_one.dart';
+import 'package:togoom/features/splash/presentation/eye_capture.dart';
 import 'package:togoom/features/splash/presentation/face_capture.dart';
 import 'package:togoom/features/splash/presentation/footprints_capture.dart';
-import 'package:togoom/features/splash/presentation/identity_checks.dart';
-import 'package:togoom/features/splash/presentation/scanner_MRZ_final.dart';
+import 'package:togoom/features/splash/presentation/icao_screen.dart';
 import 'package:togoom/features/splash/presentation/setting_page.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class StartPage extends StatelessWidget {
-  const StartPage({super.key});
+  StartPage({super.key});
+  final lang = LanguageService();
 
-final List<_FeatureItem> _features = const [
+  final List<_FeatureItem> _features = const [
     _FeatureItem(
       title: "Traitement des documents d'identité",
       icon: "assets/icons/svg/google-doc.svg",
       isPrimary: true,
-    ),
-    _FeatureItem(
-      title: "Créer un cryptographe",
-      icon: "assets/icons/svg/blockchain-04.svg",
     ),
     _FeatureItem(
       title: "Traitement MRZ et NFC",
@@ -35,12 +37,21 @@ final List<_FeatureItem> _features = const [
       icon: "assets/icons/svg/fingerprint-scan.svg",
     ),
     _FeatureItem(
+      title: "Créer un cryptographe",
+      icon: "assets/icons/svg/blockchain-04.svg",
+    ),
+    _FeatureItem(
+      title: "Vérification liveness",
+      icon: "assets/icons/svg/eye.svg",
+    ),
+    _FeatureItem(title: "Palm Vérification", icon: "assets/icons/svg/four-finger-03.svg"),
+    _FeatureItem(title: "Smile liveness", icon: "assets/icons/svg/smile.svg"),
+    _FeatureItem(title: "Passive liveness", icon: "assets/icons/svg/activity-03.svg"),
+    _FeatureItem(
       title: "Photo normes ICAO",
       icon: "assets/icons/svg/security-password-02.svg",
     ),
-    _FeatureItem(title: "Vérification liveness", icon: "assets/icons/svg/eye.svg"),
   ];
-
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +101,7 @@ final List<_FeatureItem> _features = const [
               HapticFeedback.lightImpact();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
+                MaterialPageRoute(builder: (context) => SettingsPage()),
               );
             },
           ),
@@ -105,30 +116,33 @@ final List<_FeatureItem> _features = const [
               "Cas d'utilisations activés",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
                 itemCount: _features.length,
                 itemBuilder: (context, index) {
                   final feature = _features[index];
                   return GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       if (feature.title ==
                           "Traitement des documents d'identité") {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const IdentityVerificationPage(),
+                            builder: (context) => CaptureRectoPage(),
                           ),
                         );
+ 
+                      
                       } else if (feature.title == "Traitement MRZ et NFC") {
-                        Navigator.push(
+                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ScannerMrzFinal(),
+                            builder: (context) => CaptureMrzOne(),
                           ),
                         );
+
+                        
                       } else if (feature.title == "Créer un cryptographe") {
                         Navigator.push(
                           context,
@@ -147,13 +161,52 @@ final List<_FeatureItem> _features = const [
                             ),
                           ),
                         );
-                      } else if (feature.title == "Vérification de la paume") {
+                      } else if (feature.title ==
+                          "Vérification des empreintes") {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => CaptureFootprints(),
                           ),
                         );
+                      } else if (feature.title == "Vérification liveness") {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EyeVerificationScreen(),
+                          ),
+                        );
+                      } else if (feature.title == "Photo normes ICAO") {
+                        final status = await Permission.camera.request();
+                        if (!status.isGranted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Permission caméra requise'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        try {
+                          final cameras = await availableCameras();
+                          final frontCamera = cameras.firstWhere(
+                            (camera) =>
+                                camera.lensDirection ==
+                                CameraLensDirection.front,
+                            orElse: () => cameras.first,
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  IcaoScreen(camera: frontCamera),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Erreur caméra : $e')),
+                          );
+                        }
                       }
                     },
                     child: FeatureTile(
@@ -201,7 +254,7 @@ class FeatureTile extends StatelessWidget {
             width: 24,
             height: 24,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,

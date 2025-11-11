@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class DemoPageNFC extends StatefulWidget {
   const DemoPageNFC({super.key});
@@ -10,6 +11,8 @@ class DemoPageNFC extends StatefulWidget {
 }
 
 class _DemoPageNFCState extends State<DemoPageNFC> {
+  final lang = LanguageService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,10 +42,9 @@ class _DemoPageNFCState extends State<DemoPageNFC> {
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
-
-            // Titre principal avec icône à droite
+            // Titre principal
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -66,40 +68,90 @@ class _DemoPageNFCState extends State<DemoPageNFC> {
 
             const SizedBox(height: 5),
             const Text(
-              "Les étapes pour procéder au traitement MRZ et NFC :",
+              "Suivez les étapes ci-dessous pour une vérification réussie :",
               style: TextStyle(fontSize: 14, color: Colors.black),
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 20),
-
-            // Instructions
+            const SizedBox(height: 16),
+            _buildInstructionItem(
+              iconAsset: 'assets/icons/svg/shared-wifi.svg',
+              text: "Scannez le document NFC",
+              bottomText:
+                  "Placez votre pièce contre l’arrière de votre téléphone et attendez la lecture.",
+            ),
+            const SizedBox(height: 16),
+            _buildInstructionItem(
+              iconAsset: 'assets/icons/svg/face-id.svg',
+              text: "Prenez un selfie",
+              bottomText:
+                  "Positionnez votre visage dans le cercle. Vos yeux, nez et bouche doivent être visibles.",
+            ),
+            const SizedBox(height: 16),
+            _buildInstructionItem(
+              iconAsset: 'assets/icons/svg/cardiogram-02.svg',
+              text: "Vérification de vivacité",
+              bottomText:
+                  "Restez immobile. Ne portez ni masque, ni lunettes noires.",
+            ),
+            const SizedBox(height: 24),
             _buildInstructionItem(
               iconAsset: 'assets/icons/svg/iris-scan.svg',
               text: "Scannez votre document NFC",
               bottomText: "Placez votre document dans le rectangle.",
             ),
-             const SizedBox(height: 20),
+            const SizedBox(height: 20),
             _buildInstructionItem(
               iconAsset: 'assets/icons/svg/shared-wifi.svg',
               text: 'Lancez la numrisation sans fil',
-              bottomText: "Placez votre document contre votre téléphone et attendez le progrès",
+              bottomText:
+                  "Placez votre document contre votre téléphone et attendez le progrès",
             ),
             const SizedBox(height: 20),
             _buildInstructionItem(
               iconAsset: 'assets/icons/svg/face-id.svg',
-              text: 'Prenez un selfie',
+              text:
+                  "Nettoyez l'objectif de l'appareil photo avec un chiffon sec. ",
               bottomText: "Positionnez votre visage dans le cercle.",
             ),
-            const SizedBox(height: 20),
-            _buildInstructionItem(
-              iconAsset: 'assets/icons/svg/cardiogram-02.svg',
-              text: "Vérification de la vivacité",
-              bottomText:
-                  "Essayez nos vérifications de vivacité actives et passives.",
+
+            const SizedBox(height: 32),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/capture-recto'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Commencer la vérification",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
-           
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, top: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary,
         ),
       ),
     );
@@ -108,7 +160,7 @@ class _DemoPageNFCState extends State<DemoPageNFC> {
   Widget _buildInstructionItem({
     required String iconAsset,
     required String text,
-    required String bottomText,
+    String? bottomText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,8 +168,15 @@ class _DemoPageNFCState extends State<DemoPageNFC> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SvgPicture.asset(iconAsset, width: 24, height: 24),
-            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: SvgPicture.asset(iconAsset, width: 20, height: 20),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 text,
@@ -131,14 +190,15 @@ class _DemoPageNFCState extends State<DemoPageNFC> {
             ),
           ],
         ),
-        if (bottomText.isNotEmpty)
+        if (bottomText != null && bottomText.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(left: 40, top: 4),
+            padding: const EdgeInsets.only(left: 40, top: 6),
             child: Text(
               bottomText,
               style: const TextStyle(
                 fontSize: 12,
-                color: AppColors.primary,
+                color: Colors.black,
+                height: 1.4,
               ),
             ),
           ),

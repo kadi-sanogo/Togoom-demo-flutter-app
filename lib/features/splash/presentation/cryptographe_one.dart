@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/cryptographe_two.dart';
-import 'package:togoom/features/splash/presentation/face_capture.dart';
 import 'package:togoom/features/splash/presentation/face_capture_ICAO.dart';
 import 'package:togoom/features/splash/presentation/footprints_capture.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class CryptoPage extends StatefulWidget {
   const CryptoPage({super.key});
@@ -38,7 +38,7 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        toolbarHeight: 120,
+        toolbarHeight: 100,
         centerTitle: true,
         title: const Column(
           children: [
@@ -46,16 +46,16 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
               'TOGOOM',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 24,
+                fontSize: 22,
                 color: Colors.white,
                 letterSpacing: 1.2,
               ),
             ),
-            SizedBox(height: 4),
+            SizedBox(height: 2),
             Text(
               'Créer un cryptographe',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 color: Colors.white70,
                 fontWeight: FontWeight.w400,
               ),
@@ -67,181 +67,196 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-
-              const Center(
-                child: Text(
-                  'Génération cryptographique',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
                 ),
-              ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Column(
+                            children: [
+                              const Center(
+                                child: Text(
+                                  'Génération cryptographique',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Center(
+                                child: Text(
+                                  'Sécurisation de vos données',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
 
-              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _InfoRow(
+                                      icon: Icons.access_time,
+                                      text: 'Temps estimé : 1-2 min',
+                                    ),
+                                    SizedBox(height: 6),
+                                    _BulletItem(text: "Remplir le formulaire"),
+                                    _BulletItem(text: "Capturer votre visage"),
+                                    _BulletItem(
+                                      text: "Capturer vos empreintes",
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-              const Center(
-                child: Text(
-                  'Sécurisation de vos données',
-                  style: TextStyle(fontSize: 14, color: Colors.black),
-                ),
-              ),
+                              const SizedBox(height: 8),
 
-              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    _buildTextField(
+                                      controller: _nameController,
+                                      label: 'Nom complet',
+                                      hint: 'Ex : Boni Aristide',
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _buildDateField(),
+                                    const SizedBox(height: 10),
+                                    _buildTextField(
+                                      controller: _emailController,
+                                      label: 'Email',
+                                      hint: 'exemple@mail.com',
+                                      keyboardType: TextInputType.emailAddress,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _buildTextField(
+                                      controller: _referenceController,
+                                      label: 'ID de référencement',
+                                      hint: 'Ex : AB1234CD',
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-              // Container d'information
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    _InfoRow(
-                      icon: Icons.access_time,
-                      text: 'Temps estimé : 1-2 minutes',
-                    ),
-                    SizedBox(height: 12),
-                    _BulletItem(text: "Remplir le formulaire"),
-                    _BulletItem(text: "Capturer votre visage"),
-                    _BulletItem(text: "Capturer vos empreintes"),
-                  ],
-                ),
-              ),
+                              const SizedBox(height: 6),
 
-              const SizedBox(height: 10),
+                              _buildCaptureItem(
+                                iconAsset: 'assets/icons/svg/face-id.svg',
+                                title: 'Capture visage',
+                                isDone: _isFaceCaptureDone,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => FaceCaptureIcao(),
+                                    ),
+                                  ).then((_) {
+                                    setState(() {
+                                      _isFaceCaptureDone = true;
+                                    });
+                                  });
+                                },
+                              ),
 
-              // Container du formulaire
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    _buildTextField(
-                      controller: _nameController,
-                      label: 'Nom complet',
-                      hint: 'Ex : Boni Aristide',
-                    ),
-                    const SizedBox(height: 20),
-                    _buildDateField(),
-                    const SizedBox(height: 20),
-                    _buildTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'Ex : exemple@mail.com',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildTextField(
-                      controller: _referenceController,
-                      label: 'Identifiant de référencement',
-                      hint: 'Ex : AB1234CD',
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Capture du visage
-              _buildCaptureItem(
-                iconAsset: 'assets/icons/svg/face-id.svg',
-                title: 'Capture de votre visage',
-                isDone: _isFaceCaptureDone,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>FaceCaptureIcao(
-                      
+                              // Capture empreintes
+                              _buildCaptureItem(
+                                iconAsset: 'assets/icons/svg/finger-access.svg',
+                                title: 'Capture empreintes',
+                                isDone: _isFingerprintCaptureDone,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const CaptureFootprints(),
+                                    ),
+                                  ).then((_) {
+                                    setState(() {
+                                      _isFingerprintCaptureDone = true;
+                                    });
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  );
-                  ((_) {
-                    setState(() {
-                      _isFaceCaptureDone = true;
-                    });
-                  });
-                },
-              ),
 
-              // Capture des empreintes
-              _buildCaptureItem(
-                iconAsset: 'assets/icons/svg/finger-access.svg',
-                title: 'Capture de vos empreintes',
-                isDone: _isFingerprintCaptureDone,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CaptureFootprints(),
-                    ),
-                  ).then((_) {
-                    setState(() {
-                      _isFingerprintCaptureDone = true;
-                    });
-                  });
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              // Bouton principal - Toujours actif avec couleur secondary
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CryptographeTwo(),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 45,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const CryptographeTwo(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'Créer le cryptographe',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Vos données sont sécurisées et utilisées uniquement pour la vérification.',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.black54,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Créer le cryptographe',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ],
                   ),
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              const Center(
-                child: Text(
-                  'Vos données sont sécurisées et ne seront utilisées que pour la vérification d\'identité.',
-                  style: TextStyle(fontSize: 12, color: Colors.black54),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -259,25 +274,25 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
+              horizontal: 12,
+              vertical: 10,
             ),
             filled: true,
             fillColor: Colors.white,
@@ -293,6 +308,7 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
     );
   }
 
+  // Champ date
   Widget _buildDateField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,26 +316,30 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
         const Text(
           'Date de naissance',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         TextFormField(
           controller: _birthDateController,
           readOnly: true,
           decoration: InputDecoration(
             hintText: 'jj/mm/aaaa',
-            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-            suffixIcon: const Icon(Icons.calendar_today, color: Colors.black),
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              color: Colors.black,
+              size: 18,
+            ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
+              horizontal: 12,
+              vertical: 10,
             ),
             filled: true,
             fillColor: Colors.white,
@@ -351,6 +371,7 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
     );
   }
 
+  // Cases de capture (visage / empreintes)
   Widget _buildCaptureItem({
     required String iconAsset,
     required String title,
@@ -358,48 +379,46 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
     required VoidCallback onTap,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
-        color: Colors.grey[100], // Fond gris
-        borderRadius: BorderRadius.circular(12),
-        // Suppression de la bordure
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        dense: true,
+        minVerticalPadding: 0,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         leading: Container(
-          width: 40,
-          height: 40,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
             color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SvgPicture.asset(iconAsset, width: 24, height: 24),
+            padding: const EdgeInsets.all(6.0),
+            child: SvgPicture.asset(iconAsset, width: 18, height: 18),
           ),
         ),
         title: Text(
           title,
           style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: AppColors.primary,
           ),
         ),
         trailing: Icon(
-          Icons.arrow_forward_ios,
-          color: AppColors.secondary,
-          size: 20,
+          isDone ? Icons.check_circle : Icons.arrow_forward_ios,
+          color: isDone ? Colors.green : AppColors.secondary,
+          size: isDone ? 18 : 16,
         ),
         onTap: onTap,
       ),
     );
   }
-
-  // Suppression de la méthode _canCreateCryptograph() car le bouton est toujours actif
 }
 
-// Widgets auxiliaires
 class _BulletItem extends StatelessWidget {
   final String text;
   const _BulletItem({required this.text});
@@ -407,14 +426,14 @@ class _BulletItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 4,
             height: 4,
-            margin: const EdgeInsets.only(top: 8, right: 12),
+            margin: const EdgeInsets.only(top: 6, right: 8),
             decoration: const BoxDecoration(
               color: Colors.black,
               shape: BoxShape.circle,
@@ -423,7 +442,7 @@ class _BulletItem extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 14, color: Colors.black),
+              style: const TextStyle(fontSize: 13, color: Colors.black),
             ),
           ),
         ],
@@ -439,14 +458,15 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageService();
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.black87),
-        const SizedBox(width: 8),
+        Icon(icon, size: 16, color: Colors.black87),
+        const SizedBox(width: 6),
         Text(
           text,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),

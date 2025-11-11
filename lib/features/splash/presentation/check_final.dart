@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/splash/presentation/identity_checks.dart';
+import 'package:togoom/features/splash/presentation/scan_doc_recto.dart';
+import 'package:togoom/features/splash/presentation/scan_doc_verso.dart';
 import 'package:togoom/features/splash/presentation/start_page.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class VerificationSuccessPage extends StatelessWidget {
   const VerificationSuccessPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageService();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -42,30 +45,31 @@ class VerificationSuccessPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            const SizedBox(height: 4),
             const Text(
               'Vérification réussie !',
               style: TextStyle(
-                fontSize: 26,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             const Text(
               'Votre identité a été vérifiée avec succès. Vous pouvez maintenant accéder à toutes les fonctionnalités.',
               style: TextStyle(fontSize: 14, color: Colors.black, height: 1.4),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             Container(
-              width: 406,
-              height: 236,
+              width: double.infinity,
+              height: 180,
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
@@ -94,12 +98,12 @@ class VerificationSuccessPage extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    top: 16,
-                    right: 16,
+                    top: 8,
+                    right: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 10,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.secondary,
@@ -116,7 +120,7 @@ class VerificationSuccessPage extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    bottom: 46,
+                    bottom: 24,
                     left: 0,
                     right: 0,
                     child: const Text(
@@ -133,18 +137,19 @@ class VerificationSuccessPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
 
+            // Informations du document
             Container(
-              width: 406,
-              height: 360,
-              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: const [
                   Text(
                     'Informations du document',
@@ -154,31 +159,31 @@ class VerificationSuccessPage extends StatelessWidget {
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 6),
                   _InfoItem(label: 'Nom complet', value: 'Jean Dupont'),
-                  SizedBox(height: 10),
+                  SizedBox(height: 2),
                   _InfoItem(label: 'Date de naissance', value: '24/09/1991'),
-                  SizedBox(height: 8),
+                  SizedBox(height: 3),
                   _InfoItem(label: 'Nationalité', value: 'Ivoirienne'),
-                  SizedBox(height: 8),
+                  SizedBox(height: 3),
                   _InfoItem(label: 'Document', value: 'Carte d\'Identité'),
+                  SizedBox(height: 3),
                 ],
               ),
             ),
 
-            const SizedBox(height: 30),
-
-            // Conteneur gris pour checklist
+            // Checklist
             Container(
-              width: 406,
+              width: double.infinity,
               height: 90,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _ChecklistItem(text: 'Document d\'identité validé'),
                   _ChecklistItem(text: 'Vérification de vivacité réussie'),
@@ -187,21 +192,22 @@ class VerificationSuccessPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
 
+            const Spacer(),
+
+            // Boutons
             Row(
               children: [
-                // Bouton Recommencer
                 Expanded(
                   child: SizedBox(
-                    height: 50,
+                    height: 46,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const IdentityVerificationPage(),
+                            builder: (context) => CustomCameraScreen(documentType: '', onImageCaptured: (String p1) {  }, requiresVerso: false),
                           ),
                         );
                       },
@@ -216,25 +222,22 @@ class VerificationSuccessPage extends StatelessWidget {
                       child: const Text(
                         'Recommencer',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12), // espace entre les boutons
-                // Bouton Accueil
+                const SizedBox(width: 8),
                 Expanded(
                   child: SizedBox(
-                    height: 50,
+                    height: 46,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const StartPage(),
-                          ),
+                          MaterialPageRoute(builder: (context) => StartPage()),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -248,7 +251,7 @@ class VerificationSuccessPage extends StatelessWidget {
                       child: const Text(
                         'Accueil',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -257,15 +260,15 @@ class VerificationSuccessPage extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
-      
     );
   }
 }
 
-// Info Item (dans une case blanche)
+// Info Item
 class _InfoItem extends StatelessWidget {
   final String label;
   final String value;
@@ -276,8 +279,8 @@ class _InfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 382,
-      height: 64,
-      padding: const EdgeInsets.all(12),
+      height: 56,
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -289,16 +292,16 @@ class _InfoItem extends StatelessWidget {
             width: 24,
             height: 24,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   label,
                   style: const TextStyle(fontSize: 14, color: Colors.black54),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   value,
                   style: const TextStyle(
@@ -334,8 +337,8 @@ class _ChecklistItem extends StatelessWidget {
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 10),
-        Text(text, style: const TextStyle(fontSize: 16, color: Colors.black87)),
+        const SizedBox(width: 6),
+        Text(text, style: const TextStyle(fontSize: 14, color: Colors.black87)),
       ],
     );
   }

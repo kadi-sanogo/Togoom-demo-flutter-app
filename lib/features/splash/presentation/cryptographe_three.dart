@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/start_page.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class CryptographeThree extends StatelessWidget {
   const CryptographeThree({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageService();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -79,10 +81,8 @@ class CryptographeThree extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Bouton téléchargement
             ElevatedButton(
               onPressed: () {
-                // Action de téléchargement à définir
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.secondary,
@@ -99,7 +99,6 @@ class CryptographeThree extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Bouton Retour à l'accueil
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -107,7 +106,7 @@ class CryptographeThree extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const StartPage()),
+                    MaterialPageRoute(builder: (context) =>  StartPage()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -127,7 +126,6 @@ class CryptographeThree extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Texte en bas
             const Text(
               'Vos données sont sécurisées et ne seront utilisées que pour la vérification d\'identité.',
               style: TextStyle(

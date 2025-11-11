@@ -1,520 +1,228 @@
-/*import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/splash/presentation/camera_scan.dart';
-import 'package:togoom/features/splash/presentation/scan_doc_verso.dart';
+import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-class ScanDocRecto extends StatelessWidget {
-  const ScanDocRecto({super.key});
+class CustomCameraScreen extends StatefulWidget {
+  final String documentType;
+  final Function(String) onImageCaptured;
+
+  const CustomCameraScreen({
+    super.key,
+    required this.documentType,
+    required this.onImageCaptured,
+    required bool requiresVerso,
+  });
+
+  @override
+  State<CustomCameraScreen> createState() => _CustomCameraScreenState();
+}
+
+class _CustomCameraScreenState extends State<CustomCameraScreen> {
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      Navigator.pop(context);
+      return;
+    }
+
+    final cameras = await availableCameras();
+    final backCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.back,
+      orElse: () => cameras.first,
+    );
+
+    _cameraController = CameraController(
+      backCamera,
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
+
+    await _cameraController!.initialize();
+    if (mounted) {
+      setState(() => _isCameraInitialized = true);
+    }
+  }
+
+  Future<void> _takePicture() async {
+    if (_cameraController == null || !_isCameraInitialized) return;
+
+    try {
+      final XFile image = await _cameraController!.takePicture();
+      widget.onImageCaptured(image.path);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Erreur de capture : $e")));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        toolbarHeight: 100,
-        centerTitle: true,
-        title: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'TOGGOM',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              "Traitement des documents d'identité",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.only(top: 25),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-      ),
-      body: Column(
+      backgroundColor: Colors.black,
+      body: Stack(
         children: [
-          const SizedBox(height: 30),
+          if (_isCameraInitialized)
+            SizedBox.expand(child: CameraPreview(_cameraController!))
+          else
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
 
-          const Text(
-            "Recto du document",
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
+          CustomPaint(size: Size.infinite, painter: DocScanOverlayPainter()),
 
-          const SizedBox(height: 12),
-
-          const Text(
-            "Étape 1 sur 3",
-            style: TextStyle(fontSize: 16, color: Colors.black54),
-          ),
-
-          const SizedBox(height: 24),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Stack(
-              children: [
-                Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                FractionallySizedBox(
-                  widthFactor: 1 / 3,
-                  child: Container(
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 40),
-
-          // Zone de capture
-          Expanded(
+          SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 180,
+              padding: const EdgeInsets.only(top: 40),
+              child: Center(
+                child: Text(
+                  widget.documentType == "recto"
+                      ? "Scannez le recto de votre pièce"
+                      : "Scannez le verso de votre pièce",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: 80,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: _takePicture,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4),
+                  ),
+                  child: Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[200]!, width: 12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Stack(
-                      children: [
-                        ..._buildCorners(),
-                        Center(
-                          child: SvgPicture.asset(
-                            "assets/icons/svg/camera-01.svg",
-                            width: 45,
-                            height: 45,
-                          ),
-                        ),
-                      ],
+                      color: Colors.black,
+                      shape: BoxShape.circle,
                     ),
                   ),
+                ),
+              ),
+            ),
+          ),
 
-                  const SizedBox(height: 25),
-                  SizedBox(
-                    width: 406,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[100]!,
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        "Positionnez votre document dans le cadre",
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: 406,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CustomCameraScreen(
-                              documentType: "recto",
-                              onImageCaptured: (imagePath) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ScanDocVerso(rectoImagePath: imagePath),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        "Démarrer la capture automatique",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                ],
+          SafeArea(
+            child: Positioned(
+              top: 40,
+              left: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  List<Widget> _buildCorners() {
-    return [
-      Positioned(
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.primary, width: 3),
-              left: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-
-      Positioned(
-        top: 0,
-        right: 0,
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.primary, width: 3),
-              right: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-
-      Positioned(
-        bottom: 0,
-        left: 0,
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.primary, width: 3),
-              left: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-
-      Positioned(
-        bottom: 0,
-        right: 0,
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.primary, width: 3),
-              right: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-    ];
   }
 }
-*/
 
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/splash/presentation/camera_scan.dart';
-import 'package:togoom/features/splash/presentation/scan_doc_verso.dart';
-
-class ScanDocRecto extends StatelessWidget {
-  const ScanDocRecto({super.key});
-
+class DocScanOverlayPainter extends CustomPainter {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        toolbarHeight: 100,
-        centerTitle: true,
-        title: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'TOGGOM',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              "Traitement des documents d'identité",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.only(top: 25),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 30),
+  void paint(Canvas canvas, Size size) {
+    final frameWidth = size.width * 0.85;
+    final frameHeight = frameWidth * 0.65;
 
-          const Text(
-            "Recto du document",
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
+    final left = (size.width - frameWidth) / 2;
+    final top = (size.height - frameHeight) / 2;
+    final rect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
 
-          const SizedBox(height: 12),
+    final backgroundPaint = Paint()
+      ..color = Colors.black.withOpacity(0.7)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(Offset.zero & size, backgroundPaint);
 
-          const Text(
-            "Étape 1 sur 3",
-            style: TextStyle(fontSize: 16, color: Colors.black54),
-          ),
+    canvas.saveLayer(null, Paint());
+    canvas.drawRect(rect, Paint()..blendMode = BlendMode.clear);
+    canvas.restore();
 
-          const SizedBox(height: 24),
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawRect(rect, borderPaint);
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Stack(
-              children: [
-                Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                FractionallySizedBox(
-                  widthFactor: 1 / 3,
-                  child: Container(
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+    final cornerPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
 
-          const SizedBox(height: 40),
-
-          // Zone de capture
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[200]!, width: 12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Stack(
-                      children: [
-                        ..._buildCorners(),
-                        Center(
-                          child: SvgPicture.asset(
-                            "assets/icons/svg/camera-01.svg",
-                            width: 45,
-                            height: 45,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-                  SizedBox(
-                    width: 406,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[100]!,
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        "Positionnez votre document dans le cadre",
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: 406,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CustomCameraScreen(
-                              documentType: "recto",
-                              onImageCaptured: (imagePath) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ScanDocVerso(rectoImagePath: imagePath),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        "Démarrer la capture automatique",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    final cornerLength = 25.0;
+    // Haut-gauche
+    canvas.drawLine(
+      Offset(left, top),
+      Offset(left + cornerLength, top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left, top),
+      Offset(left, top + cornerLength),
+      cornerPaint,
+    );
+    // Haut-droite
+    canvas.drawLine(
+      Offset(left + frameWidth, top),
+      Offset(left + frameWidth - cornerLength, top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + frameWidth, top),
+      Offset(left + frameWidth, top + cornerLength),
+      cornerPaint,
+    );
+    // Bas-gauche
+    canvas.drawLine(
+      Offset(left, top + frameHeight),
+      Offset(left + cornerLength, top + frameHeight),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left, top + frameHeight),
+      Offset(left, top + frameHeight - cornerLength),
+      cornerPaint,
+    );
+    // Bas-droite
+    canvas.drawLine(
+      Offset(left + frameWidth, top + frameHeight),
+      Offset(left + frameWidth - cornerLength, top + frameHeight),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + frameWidth, top + frameHeight),
+      Offset(left + frameWidth, top + frameHeight - cornerLength),
+      cornerPaint,
     );
   }
 
-  List<Widget> _buildCorners() {
-    return [
-      Positioned(
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.primary, width: 3),
-              left: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-
-      Positioned(
-        top: 0,
-        right: 0,
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.primary, width: 3),
-              right: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-
-      Positioned(
-        bottom: 0,
-        left: 0,
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.primary, width: 3),
-              left: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-
-      Positioned(
-        bottom: 0,
-        right: 0,
-        child: Container(
-          width: 100,
-          height: 50,
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.primary, width: 3),
-              right: BorderSide(color: AppColors.primary, width: 3),
-            ),
-          ),
-        ),
-      ),
-    ];
-  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

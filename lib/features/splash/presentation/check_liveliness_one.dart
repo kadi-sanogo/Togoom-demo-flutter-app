@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/check_liveliness_two.dart';
+import 'package:togoom/features/verification/language_service.dart';
 
 class LivenessPageOne extends StatelessWidget {
   const LivenessPageOne({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageService();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
