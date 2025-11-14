@@ -1,23 +1,30 @@
 import 'dart:convert' as convert;
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:togoom/features/splash/presentation/IDVerificationScreen.dart';
 import 'document_data.dart';
+import 'package:togoom/core/theme/app_colors.dart';
 
 class OCRResultsPage extends StatelessWidget {
   final DocumentData documentData;
 
-  const OCRResultsPage({Key? key, required this.documentData}) : super(key: key);
+  const OCRResultsPage({Key? key, required this.documentData})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Résultats OCR"),
+        backgroundColor: AppColors.primary,
+        title: const Text(
+          "Résultats OCR",
+          style: TextStyle(color: Colors.white),
+        ),
         actions: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, color: Colors.white),
           ),
         ],
       ),
@@ -26,8 +33,49 @@ class OCRResultsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (documentData.portrait != null)
-              _buildImageFromBase64(documentData.portrait, height: 200),
+            if (documentData.rectoImagePath != null &&
+                documentData.rectoImagePath!.isNotEmpty)
+              _buildCapturedImage(
+                documentData.rectoImagePath!,
+                "Photo de la pièce (Recto)",
+                height: 200,
+              )
+            else
+              Container(
+                width: double.infinity,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300, width: 2),
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.credit_card, size: 64, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text(
+                        "Photo de la pièce",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            if (documentData.versoImagePath != null &&
+                documentData.versoImagePath!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: _buildCapturedImage(
+                  documentData.versoImagePath!,
+                  "Photo du Verso",
+                  height: 200,
+                ),
+              ),
 
             const SizedBox(height: 16),
             const Text(
@@ -76,22 +124,29 @@ class OCRResultsPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             const Text(
-              "PHOTOS",
+              "PHOTOS EXTRAITES",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
             Row(
               children: [
+                // Photo d'identité extraite
                 if (documentData.portrait != null) ...[
                   Expanded(
-                    child: _buildPhotoSection(documentData.portrait, "Photo"),
+                    child: _buildPhotoSection(
+                      documentData.portrait,
+                      "Photo d'identité",
+                    ),
                   ),
                 ],
                 if (documentData.signature != null) ...[
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildPhotoSection(documentData.signature, "Signature"),
+                    child: _buildPhotoSection(
+                      documentData.signature,
+                      "Signature",
+                    ),
                   ),
                 ],
               ],
@@ -103,17 +158,18 @@ class OCRResultsPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.of(context)
-                        .popUntil((route) => route.isFirst),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.green),
+                      side: BorderSide(color: AppColors.secondary),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       "Recommencer",
-                      style: TextStyle(color: Colors.green),
+                      style: TextStyle(color: AppColors.secondary),
                     ),
                   ),
                 ),
@@ -128,9 +184,9 @@ class OCRResultsPage extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.secondary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: const Text(
@@ -176,15 +232,78 @@ class OCRResultsPage extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       child: Column(
         children: [
-          _buildImageFromBase64(base64Data, width: 100, height: 100),
-          const SizedBox(height: 4),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300, width: 2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: _buildImageFromBase64(base64Data, width: 120, height: 120),
+          ),
+          const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCapturedImage(String imagePath, String label, {double? height}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          height: height ?? 200,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300, width: 2),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.file(
+              File(imagePath),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                        SizedBox(height: 8),
+                        Text(
+                          "Image non disponible",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -198,24 +317,32 @@ class OCRResultsPage extends StatelessWidget {
       return Container(
         width: width ?? 100,
         height: height ?? 100,
-        color: Colors.grey[300],
-        child: const Icon(
-          Icons.image_not_supported,
-          size: 32,
-          color: Colors.grey,
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.image_not_supported, size: 32, color: Colors.grey),
+              SizedBox(height: 4),
+              Text(
+                "Non extrait",
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+            ],
+          ),
         ),
       );
     }
-    return Image.memory(
-      bytes,
-      width: width,
-      height: height,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => Container(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.memory(
+        bytes,
         width: width,
         height: height,
-        color: Colors.grey[300],
-        child: const Icon(Icons.error, size: 32, color: Colors.red),
+        fit: BoxFit.cover,
       ),
     );
   }
@@ -225,7 +352,6 @@ class OCRResultsPage extends StatelessWidget {
 
     String clean = input.trim();
 
-    // Support data URL
     if (clean.startsWith('data:image')) {
       final parts = clean.split(',');
       if (parts.length < 2) return null;

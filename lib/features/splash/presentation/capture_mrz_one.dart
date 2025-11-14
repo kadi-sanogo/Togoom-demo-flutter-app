@@ -10,7 +10,7 @@ import 'package:togoom/features/splash/presentation/document_data.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
-import 'package:image/image.dart' as img; 
+import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
 class CaptureMrzOne extends StatefulWidget {
@@ -30,6 +30,9 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
   late Animation<double> _scanAnimation;
 
   bool _isCapturing = false;
+  bool _documentDetected = false;
+  int _detectionCount = 0;
+  static const int _requiredDetections = 3;
   String? _extractedPortraitPath;
 
   final TextRecognizer _textRecognizer = TextRecognizer();
@@ -103,7 +106,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         final inputImage = _convertToInputImage(image);
         if (inputImage != null) {
           final recognizedText = await _textRecognizer.processImage(inputImage);
-          _analyzeDocument(recognizedText);
+          await _analyzeDocument(recognizedText);
         }
       } catch (e) {
         debugPrint("Erreur OCR : $e");
@@ -144,6 +147,21 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
           rotation: rotation,
           format: InputImageFormat.bgra8888,
           bytesPerRow: plane.bytesPerRow,
+        );
+
+        return InputImage.fromBytes(bytes: bytes, metadata: inputImageMetadata);
+      } else if (image.format.group == ImageFormatGroup.yuv420) {
+        final WriteBuffer allBytes = WriteBuffer();
+        for (final Plane plane in image.planes) {
+          allBytes.putUint8List(plane.bytes);
+        }
+        final bytes = allBytes.done().buffer.asUint8List();
+
+        final inputImageMetadata = InputImageMetadata(
+          size: size,
+          rotation: rotation,
+          format: InputImageFormat.yuv420,
+          bytesPerRow: image.planes[0].bytesPerRow,
         );
 
         return InputImage.fromBytes(bytes: bytes, metadata: inputImageMetadata);
@@ -190,12 +208,13 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
     }
   }
 
-  void _analyzeDocument(RecognizedText recognizedText) {
+  Future<void> _analyzeDocument(RecognizedText recognizedText) async {
     if (_isCapturing) return;
 
     final fullText = recognizedText.text.toLowerCase();
 
-    final isIdCard = fullText.contains('république') ||
+    final isIdCard =
+        fullText.contains('république') ||
         fullText.contains('republique') ||
         fullText.contains('côte') ||
         fullText.contains('cote') ||
@@ -203,7 +222,8 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         fullText.contains('carte nationale') ||
         fullText.contains('identité');
 
-    final hasEssentialFields = fullText.contains(RegExp(r'\d{8,}')) ||
+    final hasEssentialFields =
+        fullText.contains(RegExp(r'\d{8,}')) ||
         fullText.contains('nom') ||
         fullText.contains('prénom') ||
         fullText.contains('prenom') ||
@@ -211,9 +231,25 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         fullText.contains('naissance');
 
     if (isIdCard || hasEssentialFields) {
-      if (mounted) {
+      _detectionCount++;
+
+      if (!_documentDetected) {
         setState(() {
-          _statusMessage = "Document détecté Appuyez sur Capturer";
+          _documentDetected = true;
+          _statusMessage = "Document détecté ✅ Capture...";
+        });
+      }
+
+      // Capture automatique après 3 détections consécutives
+      if (_detectionCount >= _requiredDetections && !_isCapturing) {
+        await _captureAndProcess();
+      }
+    } else {
+      if (_detectionCount > 0) {
+        _detectionCount = 0;
+        setState(() {
+          _documentDetected = false;
+          _statusMessage = "Placez votre pièce d'identité dans le cadre";
         });
       }
     }
@@ -224,15 +260,14 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
 
     setState(() {
       _isCapturing = true;
-      _statusMessage = "Capture en cours...";
+      _statusMessage = "📸 Capture en cours...";
     });
 
     try {
       await _cameraController?.stopImageStream();
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 500));
       final XFile imageFile = await _cameraController!.takePicture();
 
-      // Extraire le visage de la photo de la pièce
       await _extractFaceFromIdCard(imageFile.path);
 
       final data = DocumentData();
@@ -240,7 +275,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
       data.portraitFromIdCard = _extractedPortraitPath ?? imageFile.path;
 
       if (mounted) {
-       Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CaptureMrzTwo(documentData: data),
@@ -248,10 +283,12 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         );
       }
     } catch (e) {
-      debugPrint(" Erreur capture : $e");
+      debugPrint("Erreur capture : $e");
       if (mounted) {
         setState(() {
           _isCapturing = false;
+          _detectionCount = 0;
+          _documentDetected = false;
           _statusMessage = "Erreur de capture. Réessayez.";
         });
         _startDocumentDetection();
@@ -276,14 +313,13 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         // Charger l'image originale
         final originalFile = File(imagePath);
         final originalBytes = await originalFile.readAsBytes();
-        final originalImage = img.decodeImage(originalBytes); 
+        final originalImage = img.decodeImage(originalBytes);
 
         if (originalImage == null) {
           _extractedPortraitPath = imagePath;
           return;
         }
 
-        // Ajuster les coordonnées
         int left = boundingBox.left.toInt().clamp(0, originalImage.width);
         int top = boundingBox.top.toInt().clamp(0, originalImage.height);
         int right = boundingBox.right.toInt().clamp(0, originalImage.width);
@@ -292,7 +328,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         int cropWidth = (right - left).clamp(1, originalImage.width);
         int cropHeight = (bottom - top).clamp(1, originalImage.height);
 
-        final croppedImage = img.copyCrop( 
+        final croppedImage = img.copyCrop(
           originalImage,
           x: left,
           y: top,
@@ -304,7 +340,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         final extractedPath =
             '${tempDir.path}/portrait_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final extractedFile = File(extractedPath);
-        await extractedFile.writeAsBytes(img.encodeJpg(croppedImage)); 
+        await extractedFile.writeAsBytes(img.encodeJpg(croppedImage));
 
         _extractedPortraitPath = extractedPath;
       } else {
@@ -336,12 +372,12 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
         title: const Text(
-          "Scanner le recto",
+          "Scanner le recto de votre pièce d'identité",
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
@@ -354,10 +390,15 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
           : Stack(
               children: [
                 Positioned.fill(child: CameraPreview(_cameraController!)),
+
                 CustomPaint(
                   size: Size(size.width, size.height),
-                  painter: OverlayPainter(captureSuccess: false),
+                  painter: OverlayPainter(
+                    captureSuccess: _documentDetected,
+                    screenSize: size,
+                  ),
                 ),
+
                 Column(
                   children: [
                     Padding(
@@ -365,10 +406,12 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
-                          vertical: 8,
+                          vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: _documentDetected
+                              ? Colors.green.withOpacity(0.8)
+                              : Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -382,48 +425,47 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
                         ),
                       ),
                     ),
+
                     Expanded(
-                      child: Center(
-                        child: SizedBox(
-                          width: size.width * 0.85,
-                          height: size.height * 0.35,
-                          child: CustomPaint(
-                            painter: ScanFramePainter(isSuccess: false),
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: size.height * 0.10),
+                        child: Center(
+                          child: SizedBox(
+                            width: size.width * 0.85,
+                            height: size.height * 0.32,
+                            child: CustomPaint(
+                              painter: ScanFramePainter(
+                                isSuccess: _documentDetected,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
+
+                if (_documentDetected && !_isCapturing)
+                  Positioned(
+                    bottom: 40,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.green,
+                        strokeWidth: 6,
+                      ),
+                    ),
+                  ),
               ],
             ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20.0),
-        color: Colors.black,
-        child: ElevatedButton.icon(
-          onPressed: _isCapturing ? null : _captureAndProcess,
-          icon: const Icon(Icons.camera_alt, size: 26),
-          label: const Text(
-            'Capturer',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.secondary,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 4,
-          ),
-        ),
-      ),
     );
   }
 }
 
 class ScanFramePainter extends CustomPainter {
   final bool isSuccess;
+
   ScanFramePainter({this.isSuccess = false});
 
   @override
@@ -434,15 +476,37 @@ class ScanFramePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final cornerLength = 30.0;
+
     void drawCorner(Offset start, Offset end1, Offset end2) {
       canvas.drawLine(start, end1, paint);
       canvas.drawLine(start, end2, paint);
     }
 
     drawCorner(Offset(0, 0), Offset(cornerLength, 0), Offset(0, cornerLength));
-    drawCorner(Offset(size.width, 0), Offset(size.width - cornerLength, 0), Offset(size.width, cornerLength));
-    drawCorner(Offset(0, size.height), Offset(cornerLength, size.height), Offset(0, size.height - cornerLength));
-    drawCorner(Offset(size.width, size.height), Offset(size.width - cornerLength, size.height), Offset(size.width, size.height - cornerLength));
+    drawCorner(
+      Offset(size.width, 0),
+      Offset(size.width - cornerLength, 0),
+      Offset(size.width, cornerLength),
+    );
+    drawCorner(
+      Offset(0, size.height),
+      Offset(cornerLength, size.height),
+      Offset(0, size.height - cornerLength),
+    );
+    drawCorner(
+      Offset(size.width, size.height),
+      Offset(size.width - cornerLength, size.height),
+      Offset(size.width, size.height - cornerLength),
+    );
+
+    if (isSuccess) {
+      final glow = Paint()
+        ..color = Colors.green.withOpacity(0.3)
+        ..strokeWidth = 10
+        ..style = PaintingStyle.stroke
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
+      canvas.drawRect(Offset.zero & size, glow);
+    }
   }
 
   @override
@@ -452,24 +516,44 @@ class ScanFramePainter extends CustomPainter {
 
 class OverlayPainter extends CustomPainter {
   final bool captureSuccess;
-  OverlayPainter({this.captureSuccess = false});
+  final Size screenSize;
+
+  OverlayPainter({required this.captureSuccess, required this.screenSize});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.black.withOpacity(0.7);
     final frameWidth = size.width * 0.85;
     final frameHeight = size.height * 0.35;
     final left = (size.width - frameWidth) / 2;
     final top = (size.height - frameHeight) / 2;
 
-    final path = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..addRect(Rect.fromLTWH(left, top, frameWidth, frameHeight))
-      ..fillType = PathFillType.evenOdd;
+    final paint = Paint()
+      ..color = Colors.black.withOpacity(0.7)
+      ..style = PaintingStyle.fill;
 
-    canvas.drawPath(path, paint);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, top), paint);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        0,
+        top + frameHeight,
+        size.width,
+        size.height - (top + frameHeight),
+      ),
+      paint,
+    );
+    canvas.drawRect(Rect.fromLTWH(0, top, left, frameHeight), paint);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        left + frameWidth,
+        top,
+        size.width - (left + frameWidth),
+        frameHeight,
+      ),
+      paint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant OverlayPainter oldDelegate) => false;
+  bool shouldRepaint(covariant OverlayPainter oldDelegate) =>
+      oldDelegate.captureSuccess != captureSuccess;
 }

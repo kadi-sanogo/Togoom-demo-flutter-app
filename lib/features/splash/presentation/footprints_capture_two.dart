@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/verification/language_service.dart';
 
@@ -18,12 +19,10 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
   bool _showCamera = false;
   bool _isCameraInitialized = false;
 
-  // États de détection
   DetectionState _detectionState = DetectionState.waiting;
   int _detectionProgress = 0;
   Timer? _detectionTimer;
   String _errorMessage = '';
-
   List<bool> _fingersDetected = [false, false, false, false];
 
   @override
@@ -191,6 +190,104 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
     );
   }
 
+ void _showInstructionPopup() {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(20),
+        content: SizedBox(
+          width: 350,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Instructions",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+
+              Container(
+                width: 406,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/four-finger-02.svg',
+                      text: 'Étendez et gardez les doigts ensemble',
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/camera-ai.svg',
+                      text: 'Placez vos doigts devant la caméra',
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/2nd-bracket.svg',
+                      text: "Restez immobile à l'intérieur du rectangle",
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/loading-02.svg',
+                      text:
+                          "Attendez la capture automatique (jusqu'à ce que le flash se déclenche)",
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              "D'accord",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+    Widget _buildInstructionItem({
+    required String iconAsset,
+    required String text,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SvgPicture.asset(iconAsset, width: 24, height: 24),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.primary,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     _detectionTimer?.cancel();
@@ -202,6 +299,13 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blueGrey,
+        child: const Icon(Icons.help_outline, size: 30),
+        onPressed: _showInstructionPopup,
+      ),
+
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         toolbarHeight: 100,
@@ -233,6 +337,7 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
+
       body: _showCamera && _isCameraInitialized
           ? _buildCameraScreen()
           : _buildInstructionScreen(),
@@ -263,7 +368,6 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
           ),
           const SizedBox(height: 40),
 
-          // Le reste reste identique
           GestureDetector(
             onTap: _openCamera,
             child: Container(
@@ -306,9 +410,7 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
     return Stack(
       children: [
         Positioned.fill(child: CameraPreview(_cameraController!)),
-
         Container(color: Colors.black.withOpacity(0.7)),
-
         Center(
           child: Container(
             width: 300,
@@ -317,38 +419,8 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: _getBorderColor(), width: 3),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Stack(
-                children: [
-                  if (_detectionState == DetectionState.success)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.green.withOpacity(0.3),
-                              Colors.green.withOpacity(0.5),
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.fingerprint,
-                            size: 120,
-                            color: Colors.green.withOpacity(0.8),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
           ),
         ),
-
         Positioned(
           bottom: 80,
           left: 0,
@@ -382,44 +454,6 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
     );
   }
 
-  Widget _buildFingerIndicator(int index) {
-    final isDetected = _fingersDetected[index];
-    final isActive =
-        _detectionState == DetectionState.detecting &&
-        index <= _detectionProgress ~/ 2;
-
-    return Container(
-      width: 50,
-      height: 120,
-      decoration: BoxDecoration(
-        color: isDetected
-            ? Colors.green.withOpacity(0.3)
-            : isActive
-            ? Colors.yellow.withOpacity(0.3)
-            : Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-          color: isDetected
-              ? Colors.green
-              : isActive
-              ? Colors.yellow
-              : Colors.white.withOpacity(0.5),
-          width: 2,
-        ),
-      ),
-      child: Center(
-        child: isDetected
-            ? const Icon(Icons.check, color: Colors.green, size: 30)
-            : isActive
-            ? const CircularProgressIndicator(
-                color: Colors.yellow,
-                strokeWidth: 2,
-              )
-            : null,
-      ),
-    );
-  }
-
   Color _getBorderColor() {
     switch (_detectionState) {
       case DetectionState.success:
@@ -449,9 +483,9 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
   String _getStatusMessage() {
     switch (_detectionState) {
       case DetectionState.success:
-        return '✅ Empreintes capturées !';
+        return ' Empreintes capturées !';
       case DetectionState.error:
-        return '❌ $_errorMessage';
+        return ' $_errorMessage';
       case DetectionState.detecting:
         return 'Analyse en cours...';
       default:

@@ -10,6 +10,7 @@ import 'package:togoom/features/splash/presentation/cryptographe_one.dart';
 import 'package:togoom/features/splash/presentation/eye_capture.dart';
 import 'package:togoom/features/splash/presentation/face_capture.dart';
 import 'package:togoom/features/splash/presentation/footprints_capture.dart';
+import 'package:togoom/features/splash/presentation/footprints_capture_two.dart';
 import 'package:togoom/features/splash/presentation/icao_screen.dart';
 import 'package:togoom/features/splash/presentation/setting_page.dart';
 import 'package:togoom/features/verification/language_service.dart';
@@ -44,7 +45,10 @@ class StartPage extends StatelessWidget {
       title: "Vérification liveness",
       icon: "assets/icons/svg/eye.svg",
     ),
-    _FeatureItem(title: "Passive liveness", icon: "assets/icons/svg/activity-03.svg"),
+    _FeatureItem(
+      title: "Passive liveness",
+      icon: "assets/icons/svg/activity-03.svg",
+    ),
     _FeatureItem(
       title: "Photo normes ICAO",
       icon: "assets/icons/svg/security-password-02.svg",
@@ -130,17 +134,13 @@ class StartPage extends StatelessWidget {
                             builder: (context) => CaptureRectoPage(),
                           ),
                         );
- 
-                      
                       } else if (feature.title == "Traitement MRZ et NFC") {
-                       Navigator.push(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => CaptureMrzOne(),
                           ),
                         );
-
-                        
                       } else if (feature.title == "Créer un cryptographe") {
                         Navigator.push(
                           context,
@@ -164,7 +164,7 @@ class StartPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CaptureFootprints(),
+                            builder: (context) => FootprintsCaptureTwo(),
                           ),
                         );
                       } else if (feature.title == "Vérification liveness") {
@@ -193,6 +193,7 @@ class StartPage extends StatelessWidget {
                                 CameraLensDirection.front,
                             orElse: () => cameras.first,
                           );
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(

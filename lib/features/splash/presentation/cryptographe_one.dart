@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/cryptographe_two.dart';
+import 'package:togoom/features/splash/presentation/face_capture.dart';
 import 'package:togoom/features/splash/presentation/face_capture_ICAO.dart';
 import 'package:togoom/features/splash/presentation/footprints_capture.dart';
+import 'package:togoom/features/splash/presentation/footprints_capture_two.dart';
 import 'package:togoom/features/verification/language_service.dart';
 
 class CryptoPage extends StatefulWidget {
@@ -175,7 +177,7 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => FaceCaptureIcao(),
+                                      builder: (context) => FaceCaptureCamera(),
                                     ),
                                   ).then((_) {
                                     setState(() {
@@ -195,7 +197,7 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const CaptureFootprints(),
+                                          const FootprintsCaptureTwo(),
                                     ),
                                   ).then((_) {
                                     setState(() {
@@ -371,7 +373,6 @@ class _CryptoGenerationPageState extends State<CryptoPage> {
     );
   }
 
-  // Cases de capture (visage / empreintes)
   Widget _buildCaptureItem({
     required String iconAsset,
     required String title,
