@@ -1,10 +1,10 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:togoom/features/splash/presentation/IDVerificationScreen.dart';
-import 'package:togoom/features/splash/presentation/eye_capture.dart';
-import 'package:togoom/features/splash/presentation/iris_capture.dart';
-import 'package:togoom/features/splash/presentation/smile_capture.dart';
+import 'package:togoom/features/verification/presentation/IDVerificationScreen.dart';
+import 'package:togoom/features/biometric/presentation/eye_capture.dart';
+import 'package:togoom/features/biometric/presentation/iris_capture.dart';
+import 'package:togoom/features/biometric/presentation/smile_capture.dart';
 import 'package:togoom/features/verification/language_service.dart';
 import 'package:togoom/features/splash/presentation/splash_screen.dart';
 
@@ -67,9 +67,9 @@ class TogoomApp extends StatelessWidget {
 
 /*import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:togoom/features/splash/presentation/check_liveliness_one.dart';
-import 'package:togoom/features/splash/presentation/face_capture.dart' show FaceCaptureCamera;
-import 'package:togoom/features/splash/presentation/scan_doc_verso.dart';
+import 'package:togoom/features/verification/presentation/check_liveliness_one.dart';
+import 'package:togoom/features/biometric/presentation/face_capture.dart' show FaceCaptureCamera;
+import 'package:togoom/features/document/presentation/scan_doc_verso.dart';
 import 'package:togoom/features/verification/language_service.dart';
 import 'features/splash/presentation/splash_screen.dart';
 

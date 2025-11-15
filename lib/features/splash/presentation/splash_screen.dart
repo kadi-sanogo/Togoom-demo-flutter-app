@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gif/gif.dart';
-import 'package:togoom/features/splash/presentation/start_page.dart';
+import 'package:togoom/features/auth/presentation/start_page.dart';
 import 'package:togoom/features/verification/language_service.dart';
 import 'dart:async';
-import 'home_page.dart';
+import 'package:togoom/features/auth/presentation/home_page.dart';
 
 class SplashScreen extends StatefulWidget {
    SplashScreen({super.key});
