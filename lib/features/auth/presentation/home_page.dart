@@ -54,8 +54,15 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        body: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -78,7 +85,7 @@ class _HomePageState extends State<HomePage>
                         return Transform.scale(
                           scale: _logoAnimation.value,
                           child: Opacity(
-                            opacity: _logoAnimation.value,
+                            opacity: _logoAnimation.value.clamp(0.0, 1.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -249,6 +256,7 @@ class _HomePageState extends State<HomePage>
             ),
           ),
         ],
+        ),
       ),
     );
   }
