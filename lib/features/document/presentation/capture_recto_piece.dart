@@ -1,4 +1,3 @@
-
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +31,8 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
   static const int _requiredDetections = 3;
 
   final TextRecognizer _textRecognizer = TextRecognizer();
+  
+ 
 
   @override
   void initState() {
@@ -225,7 +226,7 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
       if (!_documentDetected) {
         setState(() {
           _documentDetected = true;
-          _statusMessage = "Document détecté ✅ Capture...";
+          _statusMessage = "Document détecté , Capture...";
         });
       }
 
@@ -248,7 +249,7 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
 
     setState(() {
       _isCapturing = true;
-      _statusMessage = "📸 Capture en cours...";
+      _statusMessage = "Capture en cours...";
     });
 
     try {
@@ -266,7 +267,7 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
 
       debugPrint(" Données extraites : ${data.toString()}");
 
-      //  popup 
+      //  popup
       if (mounted) {
         _showVersoDialog(data);
       }
@@ -308,14 +309,10 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                     color: AppColors.primary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.sync,
-                    size: 48,
-                    color: AppColors.primary,
-                  ),
+                  child: Icon(Icons.sync, size: 48, color: AppColors.primary),
                 ),
                 const SizedBox(height: 24),
-                
+
                 const Text(
                   "Tournez le document de l'autre côté",
                   style: TextStyle(
@@ -326,7 +323,7 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                
+
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -365,7 +362,10 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                                 children: [
                                   Container(
                                     height: 8,
-                                    margin: const EdgeInsets.only(right: 8, bottom: 4),
+                                    margin: const EdgeInsets.only(
+                                      right: 8,
+                                      bottom: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.blue.shade400,
                                       borderRadius: BorderRadius.circular(2),
@@ -373,7 +373,10 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                                   ),
                                   Container(
                                     height: 8,
-                                    margin: const EdgeInsets.only(right: 16, bottom: 4),
+                                    margin: const EdgeInsets.only(
+                                      right: 16,
+                                      bottom: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.blue.shade400,
                                       borderRadius: BorderRadius.circular(2),
@@ -397,16 +400,17 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop(); 
+                      Navigator.of(context).pop();
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CaptureVersoPage(documentData: data),
+                          builder: (context) =>
+                              CaptureVersoPage(documentData: data),
                         ),
                       );
                     },
@@ -429,14 +433,15 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); 
+                    Navigator.of(context).pop();
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => OCRResultsPage(documentData: data),
+                        builder: (context) =>
+                            OCRResultsPage(documentData: data),
                       ),
                     );
                   },
@@ -444,7 +449,7 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                     'Skip',
                     style: TextStyle(
                       fontSize: 16,
-                      color:  AppColors.secondary,
+                      color: AppColors.secondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -478,7 +483,9 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
 
     final dateRegex = RegExp(r'\b(\d{2}[/-]\d{2}[/-]\d{4})\b');
     final dates = dateRegex.allMatches(text).map((m) => m.group(1)).toList();
-    final dateOfBirth = dates.isNotEmpty ? dates[0] ?? "Non détecté" : "Non détecté";
+    final dateOfBirth = dates.isNotEmpty
+        ? dates[0] ?? "Non détecté"
+        : "Non détecté";
 
     final sexe = text.contains(RegExp(r'\bM\b'))
         ? "M"
@@ -577,8 +584,9 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                         padding: EdgeInsets.only(bottom: size.height * 0.10),
                         child: Center(
                           child: SizedBox(
-                            width: size.width * 0.85,
-                            height: size.height * 0.32,
+                           width: size.width * 0.95,
+                            height: size.height * 0.28,
+                            
                             child: CustomPaint(
                               painter: ScanFramePainter(
                                 isSuccess: _documentDetected,
@@ -663,16 +671,14 @@ class ScanFramePainter extends CustomPainter {
 class OverlayPainter extends CustomPainter {
   final bool captureSuccess;
   final Size screenSize;
+  
 
-  OverlayPainter({
-    required this.captureSuccess,
-    required this.screenSize,
-  });
+  OverlayPainter({required this.captureSuccess, required this.screenSize});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final frameWidth = size.width * 0.85;
-    final frameHeight = size.height * 0.35;
+    final frameWidth = size.width * 0.95;
+    final frameHeight = size.height * 0.30;
     final left = (size.width - frameWidth) / 2;
     final top = (size.height - frameHeight) / 2;
 
@@ -681,12 +687,28 @@ class OverlayPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, top), paint);
-    canvas.drawRect(Rect.fromLTWH(0, top + frameHeight, size.width, size.height - (top + frameHeight)), paint);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        0,
+        top + frameHeight,
+        size.width,
+        size.height - (top + frameHeight),
+      ),
+      paint,
+    );
     canvas.drawRect(Rect.fromLTWH(0, top, left, frameHeight), paint);
-    canvas.drawRect(Rect.fromLTWH(left + frameWidth, top, size.width - (left + frameWidth), frameHeight), paint);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        left + frameWidth,
+        top,
+        size.width - (left + frameWidth),
+        frameHeight,
+      ),
+      paint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant OverlayPainter oldDelegate) => 
-    oldDelegate.captureSuccess != captureSuccess;
+  bool shouldRepaint(covariant OverlayPainter oldDelegate) =>
+      oldDelegate.captureSuccess != captureSuccess;
 }

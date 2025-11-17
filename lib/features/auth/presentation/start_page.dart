@@ -9,7 +9,6 @@ import 'package:togoom/features/document/presentation/capture_recto_piece.dart';
 import 'package:togoom/features/verification/presentation/cryptographe_one.dart';
 import 'package:togoom/features/biometric/presentation/eye_capture.dart';
 import 'package:togoom/features/biometric/presentation/face_capture.dart';
-import 'package:togoom/features/biometric/presentation/footprints_capture.dart';
 import 'package:togoom/features/biometric/presentation/footprints_capture_two.dart';
 import 'package:togoom/features/verification/presentation/icao_screen.dart';
 import 'package:togoom/features/auth/presentation/setting_page.dart';
@@ -115,7 +114,7 @@ class StartPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Cas d'utilisations activés",
+              "Cas d'utilisations ",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 10),
@@ -211,7 +210,7 @@ class StartPage extends StatelessWidget {
                     child: FeatureTile(
                       title: feature.title,
                       iconPath: feature.icon,
-                      isPrimary: feature.isPrimary,
+                     //try: feature.isPrimary,
                     ),
                   );
                 },

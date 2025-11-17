@@ -10,7 +10,7 @@ class OCRResultsPage extends StatelessWidget {
   final DocumentData documentData;
 
   const OCRResultsPage({Key? key, required this.documentData})
-    : super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -78,9 +78,23 @@ class OCRResultsPage extends StatelessWidget {
               ),
 
             const SizedBox(height: 16),
-            const Text(
-              "Côte d'Ivoire, Identity Card",
-              style: TextStyle(fontWeight: FontWeight.bold),
+            
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "Côte d'Ivoire, Identity Card",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -89,11 +103,11 @@ class OCRResultsPage extends StatelessWidget {
               "INFORMATIONS PERSONNELLES",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            _buildField("Prénoms", documentData.firstName),
-            _buildField("Nom", documentData.lastName),
-            _buildField("Date de naissance", documentData.dateOfBirth),
-            _buildField("Sexe", documentData.sex),
+            const SizedBox(height: 12),
+            _buildField("Prénom(s)", documentData.firstName, Icons.person),
+            _buildField("Nom", documentData.lastName, Icons.badge),
+            _buildField("Date de naissance", documentData.dateOfBirth, Icons.cake),
+            _buildField("Sexe", documentData.sex, Icons.wc),
 
             const SizedBox(height: 24),
 
@@ -101,12 +115,12 @@ class OCRResultsPage extends StatelessWidget {
               "INFORMATIONS DOCUMENT",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            _buildField("Numéro de pièce", documentData.documentNumber),
-            _buildField("Date d'expiration", documentData.expiryDate),
-            _buildField("Type de document", "Carte d'identité"),
-            _buildField("Date de délivrance", documentData.issueDate),
-            _buildField("Nationalité", documentData.nationality),
+            const SizedBox(height: 12),
+            _buildField("Numéro de pièce", documentData.documentNumber, Icons.numbers),
+            _buildField("Date d'expiration", documentData.expiryDate, Icons.event),
+            _buildField("Type de document", "Carte d'identité", Icons.credit_card),
+            _buildField("Date de d'émission", documentData.issueDate, Icons.calendar_today),
+            _buildField("Nationalité", documentData.nationality, Icons.flag),
 
             const SizedBox(height: 24),
 
@@ -114,12 +128,12 @@ class OCRResultsPage extends StatelessWidget {
               "INFORMATIONS SUPPLÉMENTAIRES",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            _buildField("Taille", documentData.height),
-            _buildField("Profession", documentData.profession),
-            _buildField("Lieu de naissance", documentData.placeOfBirth),
-            _buildField("CAN", documentData.can),
-            _buildField("Numéro de sécurité", documentData.securityNumber),
+            const SizedBox(height: 12),
+            _buildField("Taille", documentData.height, Icons.height),
+            _buildField("Profession", documentData.profession, Icons.work),
+            _buildField("Lieu de naissance", documentData.placeOfBirth, Icons.location_on),
+            _buildField("CAN", documentData.can, Icons.qr_code),
+            _buildField("Numéro de sécurité", documentData.securityNumber, Icons.security),
 
             const SizedBox(height: 24),
 
@@ -127,11 +141,10 @@ class OCRResultsPage extends StatelessWidget {
               "PHOTOS EXTRAITES",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             Row(
               children: [
-                // Photo d'identité extraite
                 if (documentData.portrait != null) ...[
                   Expanded(
                     child: _buildPhotoSection(
@@ -141,7 +154,7 @@ class OCRResultsPage extends StatelessWidget {
                   ),
                 ],
                 if (documentData.signature != null) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: _buildPhotoSection(
                       documentData.signature,
@@ -162,14 +175,19 @@ class OCRResultsPage extends StatelessWidget {
                       Navigator.pop(context);
                     },
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppColors.secondary),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: AppColors.secondary, width: 2),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(
                       "Recommencer",
-                      style: TextStyle(color: AppColors.secondary),
+                      style: TextStyle(
+                        color: AppColors.secondary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
@@ -184,42 +202,70 @@ class OCRResultsPage extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: AppColors.secondary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: const Text(
                       "Continuer",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildField(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildField(String label, String? value, IconData icon) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
         children: [
-          Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.grey.shade50,
-            ),
-            child: Text(
-              value ?? "–",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Icon(
+            icon,
+            color: AppColors.secondary,
+            size: 24,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value ?? "–",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -228,8 +274,12 @@ class OCRResultsPage extends StatelessWidget {
   }
 
   Widget _buildPhotoSection(String? base64Data, String label) {
-    return Padding(
-      padding: const EdgeInsets.all(4),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         children: [
           Container(
@@ -243,7 +293,11 @@ class OCRResultsPage extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
           ),
         ],
       ),
@@ -367,3 +421,4 @@ class OCRResultsPage extends StatelessWidget {
     }
   }
 }
+
