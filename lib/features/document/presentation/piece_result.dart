@@ -21,6 +21,10 @@ class OCRResultsPage extends StatelessWidget {
           "Résultats OCR",
           style: TextStyle(color: Colors.white),
         ),
+         leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
         actions: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -38,12 +42,12 @@ class OCRResultsPage extends StatelessWidget {
               _buildCapturedImage(
                 documentData.rectoImagePath!,
                 "Photo de la pièce (Recto)",
-                height: 200,
+                height: 210,
               )
             else
               Container(
                 width: double.infinity,
-                height: 200,
+                height: 210,
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(12),

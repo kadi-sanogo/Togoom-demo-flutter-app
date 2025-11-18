@@ -2,319 +2,409 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/document_data.dart';
-import 'package:togoom/features/auth/presentation/home_page.dart';
 
 class CaptureMrzResult extends StatelessWidget {
   final DocumentData documentData;
+  final String mrzImagePath;
 
-  const CaptureMrzResult({Key? key, required this.documentData}) : super(key: key);
+  const CaptureMrzResult({
+    Key? key,
+    required this.documentData,
+    required this.mrzImagePath,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final mrzData = documentData.mrzData;
+    final hasMrz = mrzData != null && mrzData.isValid;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        centerTitle: true,
         title: const Text(
-          'Résultats',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          "Résultat MRZ",
+          style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-              color: Colors.grey[100],
-              child: const Text(
-                'FACTEURS DE CONFIANCE BIOMÉTRIQUES',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                  letterSpacing: 0.5,
+      body: hasMrz
+          ? _buildSuccessView(context, mrzData)
+          : _buildErrorView(context),
+    );
+  }
+
+  Widget _buildSuccessView(BuildContext context, mrzData) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+
+          // Image de la zone MRZ capturée
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Zone MRZ capturée",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-            //  Comparaison des visages
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 2,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Correspondance faciale',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: const [
-                            Text(
-                              'Réussi',
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      File(mrzImagePath),
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Informations extraites
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Informations extraites",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                _buildInfoCard(
+                  icon: Icons.badge,
+                  title: "Type de document",
+                  value: _getDocumentType(mrzData.documentType),
+                ),
+                _buildInfoCard(
+                  icon: Icons.flag,
+                  title: "Pays émetteur",
+                  value: "${mrzData.countryCode} (${_getCountryName(mrzData.countryCode)})",
+                ),
+                _buildInfoCard(
+                  icon: Icons.numbers,
+                  title: "Numéro de document",
+                  value: mrzData.documentNumber,
+                ),
+                _buildInfoCard(
+                  icon: Icons.person,
+                  title: "Nom",
+                  value: mrzData.lastName,
+                ),
+                _buildInfoCard(
+                  icon: Icons.person_outline,
+                  title: "Prénom(s)",
+                  value: mrzData.firstName,
+                ),
+                _buildInfoCard(
+                  icon: Icons.public,
+                  title: "Nationalité",
+                  value: "${mrzData.nationality} (${_getCountryName(mrzData.nationality)})",
+                ),
+                _buildInfoCard(
+                  icon: Icons.cake,
+                  title: "Date de naissance",
+                  value: mrzData.dateOfBirth,
+                ),
+                _buildInfoCard(
+                  icon: Icons.wc,
+                  title: "Sexe",
+                  value: mrzData.sex,
+                ),
+                _buildInfoCard(
+                  icon: Icons.event_available,
+                  title: "Date d'expiration",
+                  value: mrzData.expirationDate,
+                ),
+
+                const SizedBox(height: 20),
+
+                // MRZ brute
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.code, size: 20, color: Colors.grey.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            "MRZ brute",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
                             ),
-                            SizedBox(width: 4),
-                            Icon(Icons.check_circle, color: Colors.green, size: 18),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildImageCard(
-                          documentData.portraitFromIdCard,
-                          'Photo de la pièce',
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildImageCard(
-                          documentData.selfieImagePath,
-                          'Votre selfie',
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  Text(
-                    'Vérifie que le portrait sur la pièce d\'identité correspond à votre selfie.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 2,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Caméra authentique',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                      const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Row(
-                          children: const [
-                            Text(
-                              'Réussi',
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                            Icon(Icons.check_circle, color: Colors.green, size: 18),
-                          ],
+                        child: Text(
+                          mrzData.rawMrz,
+                          style: TextStyle(
+                            fontFamily: 'Courier',
+                            fontSize: 11,
+                            color: Colors.greenAccent,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Confirme que les photos ont été prises en temps réel sur cet appareil.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      height: 1.5,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: Icon(Icons.refresh),
+                    label: Text("Rescanner"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade300,
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                    
+                    },
+                    icon: Icon(Icons.check),
+                    label: Text("Continuer"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.secondary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 80, color: Colors.red.shade400),
+            const SizedBox(height: 24),
+            Text(
+              "Erreur d'extraction MRZ",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.red.shade700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Impossible de lire les données MRZ.\nVeuillez réessayer avec une meilleure qualité d'image.",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: Icon(Icons.refresh),
+              label: Text("Réessayer"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
-
-            const SizedBox(height: 32),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.secondary,
-                        side: const BorderSide(color: AppColors.secondary, width: 2),
-                        minimumSize: const Size(0, 56),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      child: const Text(
-                        'Recommencer',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomePage()),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 56),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 4,
-                      ),
-                      child: const Text(
-                        'Accueil',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImageCard(String? imagePath, String label) {
-    return Column(
-      children: [
-        Container(
-          height: 160,
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade100,
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: imagePath != null && File(imagePath).existsSync()
-                ? Image.file(
-                    File(imagePath),
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(
-                        child: Icon(
-                          Icons.person,
-                          size: 60,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  )
-                : const Center(
-                    child: Icon(
-                      Icons.person,
-                      size: 60,
-                      color: Colors.grey,
-                    ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.secondary, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
                   ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value.isEmpty ? "N/A" : value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade900,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  String _getDocumentType(String code) {
+    switch (code.toUpperCase()) {
+      case 'P':
+      case 'PA':
+      case 'PC':
+        return "Passeport";
+      case 'ID':
+      case 'I':
+        return "Carte d'identité";
+      case 'AC':
+        return "Carte de crédit";
+      case 'V':
+      case 'VA':
+      case 'VB':
+        return "Visa";
+      default:
+        return code;
+    }
+  }
+
+  String _getCountryName(String code) {
+    final countries = {
+      'CIV': 'Côte d\'Ivoire',
+      'FRA': 'France',
+      'USA': 'États-Unis',
+      'GBR': 'Royaume-Uni',
+      'DEU': 'Allemagne',
+      'ESP': 'Espagne',
+      'ITA': 'Italie',
+      'BEL': 'Belgique',
+      'CHE': 'Suisse',
+      'CAN': 'Canada',
+      'SEN': 'Sénégal',
+      'MLI': 'Mali',
+      'BFA': 'Burkina Faso',
+      'NER': 'Niger',
+      'TGO': 'Togo',
+      'GHA': 'Ghana',
+      'NGA': 'Nigeria',
+      'BEN': 'Bénin',
+    };
+    return countries[code.toUpperCase()] ?? code;
   }
 }

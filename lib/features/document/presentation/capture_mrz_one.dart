@@ -4,6 +4,430 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/document/presentation/capture_mrz_result.dart';
+import 'package:togoom/features/document/presentation/document_data.dart';
+import 'package:togoom/features/document/presentation/mrz_detection.dart';
+import 'package:togoom/shared/widgets/overlay_painter.dart';
+import 'package:togoom/shared/widgets/mrz_frame_painter.dart';
+
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
+class CaptureMrzOne extends StatefulWidget {
+  final DocumentData documentData;
+
+  const CaptureMrzOne({Key? key, required this.documentData}) : super(key: key);
+
+  @override
+  State<CaptureMrzOne> createState() => _CaptureMrzOneState();
+}
+
+class _CaptureMrzOneState extends State<CaptureMrzOne>
+    with SingleTickerProviderStateMixin {
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+  bool _isProcessing = false;
+  String _statusMessage = "Placez le VERSO de votre pièce dans le cadre";
+  late AnimationController _animationController;
+  late Animation<double> _scanAnimation;
+
+  bool _isCapturing = false;
+  bool _mrzDetected = false;
+  int _detectionCount = 0;
+  static const int _requiredDetections = 3;
+  
+  MrzData? _detectedMrzData;
+  String? _capturedMrzImagePath;
+
+  final TextRecognizer _textRecognizer = TextRecognizer();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _scanAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_animationController);
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        _showError("Aucune caméra disponible");
+        return;
+      }
+
+      final backCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        backCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+        imageFormatGroup: Platform.isAndroid
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
+      );
+
+      await _cameraController!.initialize();
+
+      if (mounted) {
+        setState(() => _isCameraInitialized = true);
+        _startMrzDetection();
+      }
+    } catch (e) {
+      _showError("Erreur caméra : $e");
+    }
+  }
+
+  void _startMrzDetection() {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    _cameraController?.startImageStream((CameraImage image) async {
+      if (_isProcessing || _isCapturing) return;
+      _isProcessing = true;
+
+      try {
+        final inputImage = _convertToInputImage(image);
+        if (inputImage != null) {
+          final recognizedText = await _textRecognizer.processImage(inputImage);
+          await _analyzeMrz(recognizedText);
+        }
+      } catch (e) {
+        debugPrint("Erreur OCR : $e");
+      } finally {
+        await Future.delayed(const Duration(milliseconds: 500));
+        _isProcessing = false;
+      }
+    });
+  }
+
+  InputImage? _convertToInputImage(CameraImage image) {
+    try {
+      final size = Size(image.width.toDouble(), image.height.toDouble());
+      final rotation = _getInputImageRotation();
+
+      if (Platform.isAndroid && image.format.group == ImageFormatGroup.nv21) {
+        final WriteBuffer allBytes = WriteBuffer();
+        for (final Plane plane in image.planes) {
+          allBytes.putUint8List(plane.bytes);
+        }
+        final bytes = allBytes.done().buffer.asUint8List();
+
+        final inputImageMetadata = InputImageMetadata(
+          size: size,
+          rotation: rotation,
+          format: InputImageFormat.nv21,
+          bytesPerRow: image.planes[0].bytesPerRow,
+        );
+
+        return InputImage.fromBytes(bytes: bytes, metadata: inputImageMetadata);
+      } else if (Platform.isIOS &&
+          image.format.group == ImageFormatGroup.bgra8888) {
+        final plane = image.planes[0];
+        final bytes = plane.bytes;
+
+        final inputImageMetadata = InputImageMetadata(
+          size: size,
+          rotation: rotation,
+          format: InputImageFormat.bgra8888,
+          bytesPerRow: plane.bytesPerRow,
+        );
+
+        return InputImage.fromBytes(bytes: bytes, metadata: inputImageMetadata);
+      } else if (image.format.group == ImageFormatGroup.yuv420) {
+        final WriteBuffer allBytes = WriteBuffer();
+        for (final Plane plane in image.planes) {
+          allBytes.putUint8List(plane.bytes);
+        }
+        final bytes = allBytes.done().buffer.asUint8List();
+
+        final inputImageMetadata = InputImageMetadata(
+          size: size,
+          rotation: rotation,
+          format: InputImageFormat.yuv420,
+          bytesPerRow: image.planes[0].bytesPerRow,
+        );
+
+        return InputImage.fromBytes(bytes: bytes, metadata: inputImageMetadata);
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint("Erreur conversion image : $e");
+      return null;
+    }
+  }
+
+  InputImageRotation _getInputImageRotation() {
+    if (_cameraController == null) return InputImageRotation.rotation0deg;
+
+    final deviceOrientation = _cameraController!.value.deviceOrientation;
+
+    if (Platform.isAndroid) {
+      switch (deviceOrientation) {
+        case DeviceOrientation.portraitUp:
+          return InputImageRotation.rotation90deg;
+        case DeviceOrientation.landscapeLeft:
+          return InputImageRotation.rotation0deg;
+        case DeviceOrientation.portraitDown:
+          return InputImageRotation.rotation270deg;
+        case DeviceOrientation.landscapeRight:
+          return InputImageRotation.rotation180deg;
+        default:
+          return InputImageRotation.rotation90deg;
+      }
+    } else {
+      switch (deviceOrientation) {
+        case DeviceOrientation.portraitUp:
+          return InputImageRotation.rotation0deg;
+        case DeviceOrientation.landscapeLeft:
+          return InputImageRotation.rotation270deg;
+        case DeviceOrientation.portraitDown:
+          return InputImageRotation.rotation180deg;
+        case DeviceOrientation.landscapeRight:
+          return InputImageRotation.rotation90deg;
+        default:
+          return InputImageRotation.rotation0deg;
+      }
+    }
+  }
+
+  Future<void> _analyzeMrz(RecognizedText recognizedText) async {
+    if (_isCapturing) return;
+
+    final mrzData = await MrzExtractor.extractFromRecognizedText(recognizedText);
+
+    if (mrzData != null && mrzData.isValid) {
+      _detectionCount++;
+      _detectedMrzData = mrzData;
+
+      if (!_mrzDetected) {
+        setState(() {
+          _mrzDetected = true;
+          _statusMessage = "MRZ détectée - Capture en cours...";
+        });
+      }
+
+      if (_detectionCount >= _requiredDetections && !_isCapturing) {
+        await _captureAndProcess();
+      }
+    } else {
+      if (_detectionCount > 0) {
+        _detectionCount = 0;
+        setState(() {
+          _mrzDetected = false;
+          _detectedMrzData = null;
+          _statusMessage = "Placez le VERSO de votre pièce dans le cadre";
+        });
+      }
+    }
+  }
+
+  Future<void> _captureAndProcess() async {
+    if (_cameraController == null || _isCapturing) return;
+
+    setState(() {
+      _isCapturing = true;
+      _statusMessage = "Capture MRZ en cours...";
+    });
+
+    try {
+      await _cameraController?.stopImageStream();
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      final XFile imageFile = await _cameraController!.takePicture();
+      _capturedMrzImagePath = imageFile.path;
+
+      final finalMrzData = await MrzExtractor.extractFromImage(imageFile.path);
+
+      if (finalMrzData != null && finalMrzData.isValid) {
+        widget.documentData.versoImagePath = imageFile.path;
+        widget.documentData.mrzData = finalMrzData;
+        
+        widget.documentData.documentNumber = finalMrzData.documentNumber;
+        widget.documentData.firstName = finalMrzData.firstName;
+        widget.documentData.lastName = finalMrzData.lastName;
+        widget.documentData.nationality = finalMrzData.nationality;
+        widget.documentData.dateOfBirth = finalMrzData.dateOfBirth;
+        widget.documentData.sex = finalMrzData.sex;
+        widget.documentData.expiryDate = finalMrzData.expirationDate;
+
+        debugPrint("MRZ extraite avec succès : ${finalMrzData.toString()}");
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CaptureMrzResult(
+                documentData: widget.documentData,
+                mrzImagePath: _capturedMrzImagePath!,
+              ),
+            ),
+          );
+        }
+      } else {
+        if (_detectedMrzData != null) {
+          widget.documentData.versoImagePath = imageFile.path;
+          widget.documentData.mrzData = _detectedMrzData;
+          
+          widget.documentData.documentNumber = _detectedMrzData!.documentNumber;
+          widget.documentData.firstName = _detectedMrzData!.firstName;
+          widget.documentData.lastName = _detectedMrzData!.lastName;
+          widget.documentData.nationality = _detectedMrzData!.nationality;
+          widget.documentData.dateOfBirth = _detectedMrzData!.dateOfBirth;
+          widget.documentData.sex = _detectedMrzData!.sex;
+          widget.documentData.expiryDate = _detectedMrzData!.expirationDate;
+
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CaptureMrzResult(
+                  documentData: widget.documentData,
+                  mrzImagePath: _capturedMrzImagePath!,
+                ),
+              ),
+            );
+          }
+        } else {
+          throw Exception("Impossible d'extraire les données MRZ");
+        }
+      }
+    } catch (e) {
+      debugPrint("Erreur capture MRZ : $e");
+      if (mounted) {
+        setState(() {
+          _isCapturing = false;
+          _detectionCount = 0;
+          _mrzDetected = false;
+          _statusMessage = "Erreur de capture. Réessayez.";
+        });
+        _startMrzDetection();
+      }
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      setState(() => _statusMessage = message);
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _cameraController?.dispose();
+    _textRecognizer.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    final frameWidth = size.width * 0.90;
+    final frameHeight = size.height * 0.15;
+    final left = (size.width - frameWidth) / 2;
+    final top = size.height * 0.50;
+    final frameRect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        title: const Text(
+          "Scanner le VERSO (zone MRZ)",
+          style: TextStyle(color: Colors.white),
+        ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
+      ),
+      body: !_isCameraInitialized
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : Stack(
+              children: [
+                Positioned.fill(child: CameraPreview(_cameraController!)),
+
+                CustomPaint(
+                  size: Size(size.width, size.height),
+                  painter: OverlayPainter(
+                    captureSuccess: _mrzDetected,
+                    frameRect: frameRect,
+                  ),
+                ),
+
+                Positioned(
+                  left: left,
+                  top: top,
+                  child: SizedBox(
+                    width: frameWidth,
+                    height: frameHeight,
+                    child: CustomPaint(
+                      painter: MrzFramePainter(
+                        isSuccess: _mrzDetected,
+                      ),
+                    ),
+                  ),
+                ),
+
+                Positioned(
+                  top: 24,
+                  left: 24,
+                  right: 24,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _mrzDetected
+                          ? Colors.green.withOpacity(0.8)
+                          : Colors.black.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _statusMessage,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+
+              ],
+            ),
+    );
+  }
+}
+
+
+
+
+/*import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
+import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/document/presentation/capture_mrz_result.dart';
 import 'package:togoom/features/document/presentation/capture_mrz_two.dart';
 import 'package:togoom/features/document/presentation/document_data.dart';
 import 'package:togoom/shared/widgets/overlay_painter.dart';
@@ -16,7 +440,9 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
 class CaptureMrzOne extends StatefulWidget {
-  const CaptureMrzOne({Key? key}) : super(key: key);
+final DocumentData documentData;
+
+  const CaptureMrzOne({Key? key, required this.documentData}) : super(key: key);
 
   @override
   State<CaptureMrzOne> createState() => _CaptureMrzOneState();
@@ -278,11 +704,12 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
 
       if (mounted) {
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CaptureMrzTwo(documentData: data),
-          ),
-        );
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  CaptureMrzResult(documentData: widget.documentData),
+            ),
+          );
       }
     } catch (e) {
       debugPrint("Erreur capture : $e");
@@ -465,4 +892,4 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
               ),
       );
     }
-  }
+  }*/

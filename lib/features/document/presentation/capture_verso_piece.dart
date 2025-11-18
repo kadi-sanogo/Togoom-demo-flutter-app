@@ -129,7 +129,7 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
 
     setState(() {
       _isCapturing = true;
-      _statusMessage = "📸 Capture en cours...";
+      _statusMessage = " Capture en cours...";
     });
 
     try {

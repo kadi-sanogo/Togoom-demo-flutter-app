@@ -92,7 +92,7 @@ class _CaptureMrzTwoState extends State<CaptureMrzTwo>
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  CaptureMrzResult(documentData: widget.documentData),
+                  CaptureMrzResult(documentData: widget.documentData, mrzImagePath: '',),
             ),
           );
         }
@@ -228,4 +228,3 @@ class _CaptureMrzTwoState extends State<CaptureMrzTwo>
     );
   }
 }
-

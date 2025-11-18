@@ -1,15 +1,16 @@
+import 'package:togoom/features/document/presentation/mrz_detection.dart';
+
 class DocumentData {
-  String? rectoImagePath;         
-  String? portrait;                
-  String? portraitFromIdCard;     
-
-  String? selfieImagePath;        
-
+  // Images 
+  String? rectoImagePath;
   String? versoImagePath;
+  String? selfieImagePath;
+  String? portrait;               
+  String? portraitFromIdCard;     
   String? ghostPortrait;
   String? signature;
 
-  // DONNÉES TEXTUELLES (RECTO) 
+  //  Données textuelles (RECTO + VERSE)
   String? documentNumber;
   String? firstName;
   String? lastName;
@@ -19,24 +20,29 @@ class DocumentData {
   String? expiryDate;
   String? issueDate;
 
-  //  DONNÉES TEXTUELLES (VERSO)
+  
+
+  // Données verso spécifiques
   String? height;
   String? profession;
   String? placeOfBirth;
   String? can;
   String? securityNumber;
 
-  // MÉTADONNÉES 
+  //  Données MRZ 
+  MrzData? mrzData;
+
+  //  Métadonnées
   DateTime? captureDateTime;
   bool isVersoScanned = false;
 
-  //  CONSTRUCTEUR 
+  //  Constructeur
   DocumentData({
     this.rectoImagePath,
-    this.portrait,               
-    this.portraitFromIdCard,     
-    this.selfieImagePath,
     this.versoImagePath,
+    this.selfieImagePath,
+    this.portrait,
+    this.portraitFromIdCard,
     this.ghostPortrait,
     this.signature,
     this.documentNumber,
@@ -52,13 +58,15 @@ class DocumentData {
     this.placeOfBirth,
     this.can,
     this.securityNumber,
+    this.mrzData,
   }) {
     captureDateTime = DateTime.now();
-    portraitFromIdCard ??= portrait;
-    portrait ??= portraitFromIdCard;
+    // Synchroniser les portraits
+    this.portraitFromIdCard ??= this.portrait;
+    this.portrait ??= this.portraitFromIdCard;
   }
 
-  // MÉTHODES DE MISE À JOUR 
+  
   void updateFromRecto({
     String? documentNumber,
     String? firstName,
@@ -68,7 +76,7 @@ class DocumentData {
     String? sex,
     String? expiryDate,
     String? issueDate,
-    String? portrait,           
+    String? portrait,
     String? rectoImage,
   }) {
     this.documentNumber = documentNumber;
@@ -80,7 +88,6 @@ class DocumentData {
     this.expiryDate = expiryDate;
     this.issueDate = issueDate;
     this.rectoImagePath = rectoImage;
-    
     this.portrait = portrait;
     this.portraitFromIdCard = portrait;
   }
@@ -106,7 +113,10 @@ class DocumentData {
     this.isVersoScanned = true;
   }
 
-  //VALIDATIONS 
+  //  MRZ helpers
+  bool get hasMrzData => mrzData != null && mrzData!.isValid;
+
+  //  Validations 
   bool get hasRequiredPhotos =>
       (portraitFromIdCard != null || portrait != null) && 
       selfieImagePath != null;
@@ -118,15 +128,23 @@ class DocumentData {
       dateOfBirth != null &&
       hasRequiredPhotos;
 
-  // UTILITAIRES
+ 
   String get fullName {
     if (firstName == null && lastName == null) return 'N/A';
     return '${firstName ?? ''} ${lastName ?? ''}'.trim();
   }
 
-  //SÉRIALISATION 
   Map<String, dynamic> toJson() {
     return {
+      // Images
+      'rectoImagePath': rectoImagePath,
+      'versoImagePath': versoImagePath,
+      'selfieImagePath': selfieImagePath,
+      'portrait': portraitFromIdCard,
+      'ghostPortrait': ghostPortrait,
+      'signature': signature,
+
+      // Données textuelles
       'documentNumber': documentNumber,
       'firstName': firstName,
       'lastName': lastName,
@@ -135,17 +153,16 @@ class DocumentData {
       'sex': sex,
       'expiryDate': expiryDate,
       'issueDate': issueDate,
-      'portrait': portraitFromIdCard, 
-      'rectoImagePath': rectoImagePath,
-      'selfieImagePath': selfieImagePath,
       'height': height,
       'profession': profession,
       'placeOfBirth': placeOfBirth,
       'can': can,
       'securityNumber': securityNumber,
-      'ghostPortrait': ghostPortrait,
-      'signature': signature,
-      'versoImagePath': versoImagePath,
+
+      // MRZ
+      'mrzRaw': mrzData?.rawMrz,
+
+      // Métadonnées
       'captureDateTime': captureDateTime?.toIso8601String(),
       'isVersoScanned': isVersoScanned,
     };
@@ -153,6 +170,12 @@ class DocumentData {
 
   factory DocumentData.fromJson(Map<String, dynamic> json) {
     final data = DocumentData(
+      rectoImagePath: json['rectoImagePath'],
+      versoImagePath: json['versoImagePath'],
+      selfieImagePath: json['selfieImagePath'],
+      portraitFromIdCard: json['portrait'],
+      ghostPortrait: json['ghostPortrait'],
+      signature: json['signature'],
       documentNumber: json['documentNumber'],
       firstName: json['firstName'],
       lastName: json['lastName'],
@@ -161,26 +184,27 @@ class DocumentData {
       sex: json['sex'],
       expiryDate: json['expiryDate'],
       issueDate: json['issueDate'],
-      portraitFromIdCard: json['portrait'],
-      rectoImagePath: json['rectoImagePath'],
-      selfieImagePath: json['selfieImagePath'],
       height: json['height'],
       profession: json['profession'],
       placeOfBirth: json['placeOfBirth'],
       can: json['can'],
       securityNumber: json['securityNumber'],
-      ghostPortrait: json['ghostPortrait'],
-      signature: json['signature'],
-      versoImagePath: json['versoImagePath'],
     );
+
+    final mrzRaw = json['mrzRaw'] as String?;
+    if (mrzRaw != null) {
+      
+    }
+
     data.captureDateTime = json['captureDateTime'] != null
         ? DateTime.parse(json['captureDateTime'])
         : null;
+
     return data;
   }
 
   @override
   String toString() {
-    return 'DocumentData(name: $fullName, number: $documentNumber, complete: $isComplete)';
+    return 'DocumentData(name: $fullName, number: $documentNumber, complete: $isComplete, MRZ: ${hasMrzData ? "✓" : "✗"})';
   }
 }
