@@ -28,7 +28,7 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
 
   late FaceDetector _faceDetector;
   int _faceDetectedFrames = 0;
-  static const int _requiredFrames = 10;
+  static const int _requiredFrames = 5;
 
   @override
   void initState() {
@@ -40,10 +40,10 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
   void _initializeFaceDetector() {
     final options = FaceDetectorOptions(
       enableContours: false,
-      enableClassification: false,
-      enableTracking: false,
+      enableClassification: true,
+      enableTracking: true,
       minFaceSize: 0.15,
-      performanceMode: FaceDetectorMode.fast,
+      performanceMode: FaceDetectorMode.accurate,
     );
     _faceDetector = FaceDetector(options: options);
   }

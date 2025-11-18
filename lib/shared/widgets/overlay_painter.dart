@@ -13,36 +13,25 @@ class OverlayPainter extends CustomPainter {
       ..color = Colors.black.withOpacity(0.7)
       ..style = PaintingStyle.fill;
 
-    // Zone au-dessus du cadre
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, frameRect.top), paint);
+    final borderRadius = 12.0;
+    final rrect = RRect.fromRectAndRadius(frameRect, Radius.circular(borderRadius));
 
-    // Zone en-dessous du cadre
-    canvas.drawRect(
-      Rect.fromLTWH(
-        0,
-        frameRect.bottom,
-        size.width,
-        size.height - frameRect.bottom,
-      ),
-      paint,
+    // Créer un path pour tout l'écran
+    final fullScreenPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Créer un path pour le cadre arrondi
+    final framePath = Path()
+      ..addRRect(rrect);
+
+    // Soustraire le cadre du plein écran pour créer le masque
+    final overlayPath = Path.combine(
+      PathOperation.difference,
+      fullScreenPath,
+      framePath,
     );
 
-    // Zone à gauche du cadre
-    canvas.drawRect(
-      Rect.fromLTWH(0, frameRect.top, frameRect.left, frameRect.height),
-      paint,
-    );
-
-    // Zone à droite du cadre
-    canvas.drawRect(
-      Rect.fromLTWH(
-        frameRect.right,
-        frameRect.top,
-        size.width - frameRect.right,
-        frameRect.height,
-      ),
-      paint,
-    );
+    canvas.drawPath(overlayPath, paint);
   }
 
   @override

@@ -7,7 +7,7 @@ import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/capture_mrz_two.dart';
 import 'package:togoom/features/document/presentation/document_data.dart';
 import 'package:togoom/shared/widgets/overlay_painter.dart';
-import 'package:togoom/shared/widgets/scan_frame_painter.dart';
+import 'package:togoom/shared/widgets/mrz_frame_painter.dart';
 
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
@@ -373,9 +373,9 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    // Calcul du frameRect pour l'overlay
-    final frameWidth = size.width * 0.85;
-    final frameHeight = size.height * 0.35;
+    // Calcul du frameRect pour l'overlay - zone MRZ réaliste
+    final frameWidth = size.width * 0.90;
+    final frameHeight = size.height * 0.12;
     final left = (size.width - frameWidth) / 2;
     final top = (size.height - frameHeight) / 2;
     final frameRect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
@@ -415,7 +415,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
                     width: frameWidth,
                     height: frameHeight,
                     child: CustomPaint(
-                      painter: ScanFramePainter(
+                      painter: MrzFramePainter(
                         isSuccess: _documentDetected,
                       ),
                     ),

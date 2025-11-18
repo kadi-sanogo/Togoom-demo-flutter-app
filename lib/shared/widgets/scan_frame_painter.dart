@@ -13,29 +13,11 @@ class ScanFramePainter extends CustomPainter {
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
-    final cornerLength = 30.0;
+    final borderRadius = 12.0;
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
 
-    void drawCorner(Offset start, Offset end1, Offset end2) {
-      canvas.drawLine(start, end1, paint);
-      canvas.drawLine(start, end2, paint);
-    }
-
-    drawCorner(Offset(0, 0), Offset(cornerLength, 0), Offset(0, cornerLength));
-    drawCorner(
-      Offset(size.width, 0),
-      Offset(size.width - cornerLength, 0),
-      Offset(size.width, cornerLength),
-    );
-    drawCorner(
-      Offset(0, size.height),
-      Offset(cornerLength, size.height),
-      Offset(0, size.height - cornerLength),
-    );
-    drawCorner(
-      Offset(size.width, size.height),
-      Offset(size.width - cornerLength, size.height),
-      Offset(size.width, size.height - cornerLength),
-    );
+    canvas.drawRRect(rrect, paint);
 
     if (isSuccess) {
       final glow = Paint()
@@ -43,7 +25,7 @@ class ScanFramePainter extends CustomPainter {
         ..strokeWidth = 10
         ..style = PaintingStyle.stroke
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
-      canvas.drawRect(Offset.zero & size, glow);
+      canvas.drawRRect(rrect, glow);
     }
   }
 
