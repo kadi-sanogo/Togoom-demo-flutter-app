@@ -4,7 +4,6 @@ import 'package:camera/camera.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/auth/presentation/home_page.dart';
-import 'package:togoom/features/verification/presentation/icao_screen.dart';
 
 const CameraDescription frontCamera = CameraDescription(
   name: 'front',

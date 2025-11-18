@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:togoom/shared/widgets/document_frame_painter.dart';
 
 class CustomCameraScreen extends StatefulWidget {
   final String documentType;
@@ -84,7 +85,20 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
           else
             const Center(child: CircularProgressIndicator(color: Colors.white)),
 
-          CustomPaint(size: Size.infinite, painter: DocScanOverlayPainter()),
+          CustomPaint(
+            size: Size.infinite,
+            painter: DocumentFramePainter(
+              frameWidthRatio: 0.85,
+              useAspectRatio: true,
+              aspectRatio: 1 / 0.65, // frameWidth * 0.65 = frameHeight
+              showBorder: true,
+              borderColor: Colors.white,
+              borderStrokeWidth: 3.0,
+              cornerColor: Colors.white,
+              cornerLength: 25.0,
+              cornerStrokeWidth: 3.0,
+            ),
+          ),
 
           SafeArea(
             child: Padding(
@@ -144,85 +158,4 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
       ),
     );
   }
-}
-
-class DocScanOverlayPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final frameWidth = size.width * 0.85;
-    final frameHeight = frameWidth * 0.65;
-
-    final left = (size.width - frameWidth) / 2;
-    final top = (size.height - frameHeight) / 2;
-    final rect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
-
-    final backgroundPaint = Paint()
-      ..color = Colors.black.withOpacity(0.7)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Offset.zero & size, backgroundPaint);
-
-    canvas.saveLayer(null, Paint());
-    canvas.drawRect(rect, Paint()..blendMode = BlendMode.clear);
-    canvas.restore();
-
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    canvas.drawRect(rect, borderPaint);
-
-    final cornerPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
-    final cornerLength = 25.0;
-    // Haut-gauche
-    canvas.drawLine(
-      Offset(left, top),
-      Offset(left + cornerLength, top),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left, top),
-      Offset(left, top + cornerLength),
-      cornerPaint,
-    );
-    // Haut-droite
-    canvas.drawLine(
-      Offset(left + frameWidth, top),
-      Offset(left + frameWidth - cornerLength, top),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left + frameWidth, top),
-      Offset(left + frameWidth, top + cornerLength),
-      cornerPaint,
-    );
-    // Bas-gauche
-    canvas.drawLine(
-      Offset(left, top + frameHeight),
-      Offset(left + cornerLength, top + frameHeight),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left, top + frameHeight),
-      Offset(left, top + frameHeight - cornerLength),
-      cornerPaint,
-    );
-    // Bas-droite
-    canvas.drawLine(
-      Offset(left + frameWidth, top + frameHeight),
-      Offset(left + frameWidth - cornerLength, top + frameHeight),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left + frameWidth, top + frameHeight),
-      Offset(left + frameWidth, top + frameHeight - cornerLength),
-      cornerPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

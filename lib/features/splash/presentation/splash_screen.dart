@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gif/gif.dart';
 import 'package:togoom/features/auth/presentation/start_page.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 import 'dart:async';
 import 'package:togoom/features/auth/presentation/home_page.dart';
 

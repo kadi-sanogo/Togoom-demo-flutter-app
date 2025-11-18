@@ -4,7 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/auth/presentation/use_case.dart';
 import 'package:togoom/features/auth/presentation/language_page.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
+import 'package:togoom/features/auth/presentation/widgets/feature_tile.dart';
 
 class SettingsPage extends StatefulWidget {
    SettingsPage({super.key});
@@ -82,7 +83,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     itemCount: settings.length,
                     itemBuilder: (context, index) {
                       final setting = settings[index];
-                      return GestureDetector(
+                      return FeatureTile(
+                        title: setting.title,
+                        iconPath: setting.icon,
                         onTap: () async {
                           if (setting.key == 'use_cases') {
                             await Navigator.push(
@@ -100,10 +103,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             );
                           }
                         },
-                        child: FeatureTile(
-                          title: setting.title,
-                          iconPath: setting.icon,
-                        ),
                       );
                     },
                   ),
@@ -122,57 +121,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         );
       },
-    );
-  }
-}
-
-class FeatureTile extends StatelessWidget {
-  final String title;
-  final String iconPath;
-  final bool isPrimary;
-
-  const FeatureTile({
-    super.key,
-    required this.title,
-    required this.iconPath,
-    this.isPrimary = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: isPrimary ? AppColors.secondary : const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          SvgPicture.asset(
-            iconPath,
-            color: isPrimary ? Colors.white : AppColors.secondary,
-            width: 24,
-            height: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: isPrimary ? Colors.white : AppColors.primary,
-              ),
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: isPrimary ? Colors.white : AppColors.secondary,
-          ),
-        ],
-      ),
     );
   }
 }

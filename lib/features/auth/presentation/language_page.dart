@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 
 class LanguagePage extends StatefulWidget {

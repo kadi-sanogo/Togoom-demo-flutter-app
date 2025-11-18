@@ -3,7 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/splash/presentation/camera_scan.dart';
 import 'package:togoom/features/splash/presentation/scan_doc.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class ScanDocVerso extends StatelessWidget {
   final String? rectoImagePath;

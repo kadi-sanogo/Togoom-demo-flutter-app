@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/capture_mrz_result.dart';
 import 'package:togoom/features/document/presentation/document_data.dart';
+import 'package:togoom/shared/widgets/circle_border_painter.dart';
 
 class CaptureMrzTwo extends StatefulWidget {
   final DocumentData documentData;
@@ -13,33 +14,6 @@ class CaptureMrzTwo extends StatefulWidget {
 
   @override
   State<CaptureMrzTwo> createState() => _CaptureMrzTwoState();
-}
-
-class _CircleBorderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double radius;
-
-  _CircleBorderPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.radius,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke
-      ..isAntiAlias = true;
-
-    final center = Offset(size.width / 2, size.height / 2);
-    canvas.drawCircle(center, radius - strokeWidth / 2, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _CaptureMrzTwoState extends State<CaptureMrzTwo>
@@ -154,7 +128,7 @@ class _CaptureMrzTwoState extends State<CaptureMrzTwo>
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Stack(
               children: [
-                Container(color: Colors.black),
+                SizedBox.expand(child: Container(color: Colors.black)),
 
                 Center(
                   child: ClipOval(
@@ -184,7 +158,7 @@ class _CaptureMrzTwoState extends State<CaptureMrzTwo>
                       final animatedRadius = circleRadius * _pulseAnimation.value;
                       return CustomPaint(
                         size: Size(animatedRadius * 2, animatedRadius * 2),
-                        painter: _CircleBorderPainter(
+                        painter: CircleBorderPainter(
                           color: Colors.white,
                           strokeWidth: 4,
                           radius: animatedRadius,

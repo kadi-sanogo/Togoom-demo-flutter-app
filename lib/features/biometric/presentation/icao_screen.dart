@@ -9,7 +9,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/verification/presentation/icao_result.dart';
+import 'package:togoom/features/biometric/presentation/icao_result.dart';
 
 class IcaoScreen extends StatefulWidget {
   final CameraDescription camera;
@@ -59,9 +59,11 @@ class _IcaoScreenState extends State<IcaoScreen> {
 
     _cameraController = CameraController(
       widget.camera,
-      ResolutionPreset.medium,
+      ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.yuv420,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
     );
 
     await _cameraController!.initialize();
@@ -304,32 +306,29 @@ class _IcaoScreenState extends State<IcaoScreen> {
 
       body: Stack(
         children: [
-          Column(
-            children: [
-              const SizedBox(height: 20),
-              Expanded(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CameraPreview(_cameraController!),
-                    CustomPaint(
-                      painter: FaceCircleOverlayPainter(
-                        faceDetected: _faceDetected,
-                      ),
-                      size: Size.infinite,
-                    ),
-                    if (_isCapturing)
-                      Container(
-                        color: Colors.black54,
-                        child: const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        ),
-                      ),
-                  ],
-                ),
+          Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _cameraController!.value.previewSize!.height,
+                height: _cameraController!.value.previewSize!.width,
+                child: CameraPreview(_cameraController!),
               ),
-            ],
+            ),
           ),
+          CustomPaint(
+            painter: FaceCircleOverlayPainter(
+              faceDetected: _faceDetected,
+            ),
+            size: Size.infinite,
+          ),
+          if (_isCapturing)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
           Positioned(
             bottom: 25,
             right: 25,

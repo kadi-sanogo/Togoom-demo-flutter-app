@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/biometric/presentation/footprints_capture_two.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class CaptureFootprints extends StatefulWidget {
   const CaptureFootprints({super.key});

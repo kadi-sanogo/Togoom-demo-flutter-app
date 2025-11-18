@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/verification/presentation/cryptographe_three.dart';
 import 'package:togoom/features/auth/presentation/start_page.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class CryptographeTwo extends StatelessWidget {
   const CryptographeTwo({super.key});

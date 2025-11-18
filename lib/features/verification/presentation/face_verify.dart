@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class VerificationSuccessPage extends StatelessWidget {
   final String imagePath;

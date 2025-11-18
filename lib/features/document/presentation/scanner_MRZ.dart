@@ -4,7 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/scanner_MRZ_two.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class ScannerMrz extends StatelessWidget {
    ScannerMrz({super.key});

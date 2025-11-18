@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
+import 'package:togoom/shared/widgets/document_frame_painter.dart';
 
 class CustomCameraScreen extends StatefulWidget {
   final Function(String imagePath) onImageCaptured;
@@ -101,7 +102,18 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
 
           Positioned.fill(
             child: CustomPaint(
-              painter: DocumentFramePainter(),
+              painter: DocumentFramePainter(
+                frameWidthRatio: 0.8,
+                useAspectRatio: true,
+                aspectRatio: 1.586,
+                cornerColor: AppColors.secondary,
+                cornerLength: 30.0,
+                cornerStrokeWidth: 4.0,
+                borderRadius: 12.0,
+                showBorder: true,
+                borderColor: Colors.white.withOpacity(0.3),
+                overlayOpacity: 0.6,
+              ),
               child: Container(),
             ),
           ),
@@ -255,98 +267,4 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
       ),
     );
   }
-}
-
-class DocumentFramePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    const double frameRatio = 1.586;
-    final double frameWidth = size.width * 0.8;
-    final double frameHeight = frameWidth / frameRatio;
-    
-    final double left = (size.width - frameWidth) / 2;
-    final double top = (size.height - frameHeight) / 2;
-
-    // Zone du cadre
-    final frameRect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
-
-    final overlayPath = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..addRRect(RRect.fromRectAndRadius(frameRect, const Radius.circular(12)))
-      ..fillType = PathFillType.evenOdd;
-
-    final overlayPaint = Paint()
-      ..color = Colors.black.withOpacity(0.6);
-    
-    canvas.drawPath(overlayPath, overlayPaint);
-
-    final cornerPaint = Paint()
-      ..color = AppColors.secondary
-      ..strokeWidth = 4
-      ..style = PaintingStyle.stroke;
-
-    final double cornerSize = 30;
-
-    //  supérieur gauche
-    canvas.drawLine(
-      Offset(left, top + cornerSize),
-      Offset(left, top + 12),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left + 12, top),
-      Offset(left + cornerSize, top),
-      cornerPaint,
-    );
-
-    //  supérieur droit
-    canvas.drawLine(
-      Offset(left + frameWidth - cornerSize, top),
-      Offset(left + frameWidth - 12, top),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left + frameWidth, top + 12),
-      Offset(left + frameWidth, top + cornerSize),
-      cornerPaint,
-    );
-
-    //  inférieur gauche
-    canvas.drawLine(
-      Offset(left, top + frameHeight - cornerSize),
-      Offset(left, top + frameHeight - 12),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left + 12, top + frameHeight),
-      Offset(left + cornerSize, top + frameHeight),
-      cornerPaint,
-    );
-
-    //  inférieur droit
-    canvas.drawLine(
-      Offset(left + frameWidth - cornerSize, top + frameHeight),
-      Offset(left + frameWidth - 12, top + frameHeight),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(left + frameWidth, top + frameHeight - 12),
-      Offset(left + frameWidth, top + frameHeight - cornerSize),
-      cornerPaint,
-    );
-
-    // Dessiner une bordure subtile autour du cadre
-    final borderPaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(frameRect, const Radius.circular(12)),
-      borderPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

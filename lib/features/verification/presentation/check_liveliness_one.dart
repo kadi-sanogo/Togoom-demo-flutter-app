@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/verification/presentation/check_liveliness_two.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class LivenessPageOne extends StatelessWidget {
   const LivenessPageOne({super.key});

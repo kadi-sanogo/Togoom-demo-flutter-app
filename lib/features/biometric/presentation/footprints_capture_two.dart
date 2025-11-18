@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class FootprintsCaptureTwo extends StatefulWidget {
   const FootprintsCaptureTwo({super.key});

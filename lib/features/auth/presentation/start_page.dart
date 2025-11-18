@@ -10,45 +10,46 @@ import 'package:togoom/features/verification/presentation/cryptographe_one.dart'
 import 'package:togoom/features/biometric/presentation/eye_capture.dart';
 import 'package:togoom/features/biometric/presentation/face_capture.dart';
 import 'package:togoom/features/biometric/presentation/footprints_capture_two.dart';
-import 'package:togoom/features/verification/presentation/icao_screen.dart';
+import 'package:togoom/features/biometric/presentation/icao_screen.dart';
 import 'package:togoom/features/auth/presentation/setting_page.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
+import 'package:togoom/features/auth/domain/feature_item.dart';
+import 'package:togoom/features/auth/presentation/widgets/feature_tile.dart';
 
 class StartPage extends StatelessWidget {
   StartPage({super.key});
   final lang = LanguageService();
 
-  final List<_FeatureItem> _features = const [
-    _FeatureItem(
+  final List<FeatureItem> _features = const [
+    FeatureItem(
       title: "Traitement des documents d'identité",
       icon: "assets/icons/svg/google-doc.svg",
-      isPrimary: true,
     ),
-    _FeatureItem(
+    FeatureItem(
       title: "Traitement MRZ et NFC",
       icon: "assets/icons/svg/smartphone-wifi.svg",
     ),
-    _FeatureItem(
+    FeatureItem(
       title: "Vérification faciale",
       icon: "assets/icons/svg/face-id.svg",
     ),
-    _FeatureItem(
+    FeatureItem(
       title: "Vérification des empreintes",
       icon: "assets/icons/svg/fingerprint-scan.svg",
     ),
-    _FeatureItem(
+    FeatureItem(
       title: "Créer un cryptographe",
       icon: "assets/icons/svg/blockchain-04.svg",
     ),
-    _FeatureItem(
+    FeatureItem(
       title: "Vérification liveness",
       icon: "assets/icons/svg/eye.svg",
     ),
-    _FeatureItem(
+    FeatureItem(
       title: "Passive liveness",
       icon: "assets/icons/svg/activity-03.svg",
     ),
-    _FeatureItem(
+    FeatureItem(
       title: "Photo normes ICAO",
       icon: "assets/icons/svg/security-password-02.svg",
     ),
@@ -123,8 +124,12 @@ class StartPage extends StatelessWidget {
                 itemCount: _features.length,
                 itemBuilder: (context, index) {
                   final feature = _features[index];
-                  return GestureDetector(
+                  return FeatureTile(
+                    title: feature.title,
+                    iconPath: feature.icon,
+                    isPrimary: feature.isPrimary,
                     onTap: () async {
+                      HapticFeedback.lightImpact();
                       if (feature.title ==
                           "Traitement des documents d'identité") {
                         Navigator.push(
@@ -207,11 +212,6 @@ class StartPage extends StatelessWidget {
                         }
                       }
                     },
-                    child: FeatureTile(
-                      title: feature.title,
-                      iconPath: feature.icon,
-                     //try: feature.isPrimary,
-                    ),
                   );
                 },
               ),
@@ -223,65 +223,3 @@ class StartPage extends StatelessWidget {
   }
 }
 
-class FeatureTile extends StatelessWidget {
-  final String title;
-  final String iconPath;
-  final bool isPrimary;
-
-  const FeatureTile({
-    super.key,
-    required this.title,
-    required this.iconPath,
-    this.isPrimary = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: isPrimary ? AppColors.secondary : const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          SvgPicture.asset(
-            iconPath,
-            color: isPrimary ? Colors.white : AppColors.secondary,
-            width: 24,
-            height: 24,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: isPrimary ? Colors.white : AppColors.primary,
-              ),
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: isPrimary ? Colors.white : AppColors.secondary,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureItem {
-  final String title;
-  final String icon;
-  final bool isPrimary;
-
-  const _FeatureItem({
-    required this.title,
-    required this.icon,
-    this.isPrimary = false,
-  });
-}

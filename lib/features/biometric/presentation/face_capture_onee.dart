@@ -4,7 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/biometric/presentation/face_capture_two.dart';
 import 'package:togoom/features/verification/presentation/face_verify.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class FaceCaptureScreenOne extends StatefulWidget {
   const FaceCaptureScreenOne({super.key});

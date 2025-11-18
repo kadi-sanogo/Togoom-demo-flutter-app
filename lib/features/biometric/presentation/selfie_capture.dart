@@ -90,7 +90,9 @@ class _SelfieCaptureScreenState extends State<SelfieCaptureScreen> {
       ),
       body: Stack(
         children: [
-          CameraPreview(_controller),
+          Positioned.fill(
+            child: CameraPreview(_controller),
+          ),
           Positioned.fill(
             child: Align(
               alignment: Alignment.center,

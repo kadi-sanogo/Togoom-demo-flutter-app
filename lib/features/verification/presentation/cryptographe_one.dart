@@ -6,7 +6,7 @@ import 'package:togoom/features/biometric/presentation/face_capture.dart';
 import 'package:togoom/features/biometric/presentation/face_capture_ICAO.dart';
 import 'package:togoom/features/biometric/presentation/footprints_capture.dart';
 import 'package:togoom/features/biometric/presentation/footprints_capture_two.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class CryptoPage extends StatefulWidget {
   const CryptoPage({super.key});

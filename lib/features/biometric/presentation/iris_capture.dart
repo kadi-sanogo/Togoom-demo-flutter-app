@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:togoom/shared/widgets/circular_frame_painter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 class IrisCaptureScreen extends StatefulWidget {
@@ -174,7 +175,7 @@ class _IrisCaptureScreenState extends State<IrisCaptureScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("✓ Iris captured successfully!"),
+            content: Text("Iris capturé avec succès"),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -209,14 +210,23 @@ class _IrisCaptureScreenState extends State<IrisCaptureScreen> {
       body: Stack(
         children: [
           if (_isCameraInitialized)
-            SizedBox.expand(child: CameraPreview(_cameraController!))
+            Positioned.fill(
+              child: CameraPreview(_cameraController!),
+            )
           else
             const Center(child: CircularProgressIndicator(color: Colors.white)),
 
           CustomPaint(
             size: Size.infinite,
-            painter: CircularOverlayPainter(
+            painter: CircularFramePainter(
+              radiusRatio: 0.35,
+              overlayColor: Colors.black,
+              overlayOpacity: 0.6,
               circleColor: _faceDetected ? Colors.green : Colors.white,
+              circleStrokeWidth: 3.0,
+              isSuccess: _faceDetected,
+              successColor: Colors.green,
+              showGlow: false,
             ),
           ),
 
@@ -293,40 +303,4 @@ class _IrisCaptureScreenState extends State<IrisCaptureScreen> {
       ),
     );
   }
-}
-
-class CircularOverlayPainter extends CustomPainter {
-  final Color circleColor;
-
-  CircularOverlayPainter({required this.circleColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.35;
-
-    canvas.saveLayer(null, Paint());
-
-    final overlayPaint = Paint()
-      ..color = Colors.black.withOpacity(0.6)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Offset.zero & size, overlayPaint);
-
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()..blendMode = BlendMode.clear,
-    );
-
-    final circlePaint = Paint()
-      ..color = circleColor.withOpacity(0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    canvas.drawCircle(center, radius, circlePaint);
-
-    canvas.restore(); 
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

@@ -8,7 +8,8 @@ import 'package:togoom/features/auth/presentation/demo_page_two.dart';
 import 'package:togoom/features/biometric/presentation/face_capture.dart';
 import 'package:togoom/features/biometric/presentation/footprints_capture.dart';
 import 'package:togoom/features/auth/presentation/setting_page.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
+import 'package:togoom/features/auth/presentation/widgets/feature_tile.dart';
 
 class StartPageone extends StatelessWidget {
    StartPageone({super.key});
@@ -112,8 +113,12 @@ class StartPageone extends StatelessWidget {
                 itemCount: _features.length,
                 itemBuilder: (context, index) {
                   final feature = _features[index];
-                  return GestureDetector(
+                  return FeatureTile(
+                    title: feature.title,
+                    iconPath: feature.icon,
+                    isPrimary: feature.isPrimary,
                     onTap: () {
+                      HapticFeedback.lightImpact();
                       if (feature.title ==
                           "Traitement des documents d'identité") {
                         Navigator.push(
@@ -157,68 +162,12 @@ class StartPageone extends StatelessWidget {
                         );
                       }
                     },
-                    child: FeatureTile(
-                      title: feature.title,
-                      iconPath: feature.icon,
-                      isPrimary: feature.isPrimary,
-                    ),
                   );
                 },
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class FeatureTile extends StatelessWidget {
-  final String title;
-  final String iconPath;
-  final bool isPrimary;
-
-  const FeatureTile({
-    super.key,
-    required this.title,
-    required this.iconPath,
-    this.isPrimary = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: isPrimary ? AppColors.secondary : const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          SvgPicture.asset(
-            iconPath,
-            color: isPrimary ? Colors.white : AppColors.secondary,
-            width: 24,
-            height: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: isPrimary ? Colors.white : AppColors.primary,
-              ),
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: isPrimary ? Colors.white : AppColors.secondary,
-          ),
-        ],
       ),
     );
   }

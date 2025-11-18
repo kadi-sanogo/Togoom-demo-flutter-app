@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class TText extends StatelessWidget {
   final String translationKey;

@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/capture_mrz_two.dart';
 import 'package:togoom/features/document/presentation/document_data.dart';
+import 'package:togoom/shared/widgets/overlay_painter.dart';
+import 'package:togoom/shared/widgets/scan_frame_painter.dart';
 
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
@@ -236,7 +238,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
       if (!_documentDetected) {
         setState(() {
           _documentDetected = true;
-          _statusMessage = "Document détecté ✅ Capture...";
+          _statusMessage = "Document détecté - Capture...";
         });
       }
 
@@ -260,7 +262,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
 
     setState(() {
       _isCapturing = true;
-      _statusMessage = "📸 Capture en cours...";
+      _statusMessage = "Capture en cours...";
     });
 
     try {
@@ -371,6 +373,13 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
+    // Calcul du frameRect pour l'overlay
+    final frameWidth = size.width * 0.85;
+    final frameHeight = size.height * 0.35;
+    final left = (size.width - frameWidth) / 2;
+    final top = (size.height - frameHeight) / 2;
+    final frameRect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -395,54 +404,49 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
                   size: Size(size.width, size.height),
                   painter: OverlayPainter(
                     captureSuccess: _documentDetected,
-                    screenSize: size,
+                    frameRect: frameRect,
                   ),
                 ),
 
-                Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _documentDetected
-                              ? Colors.green.withOpacity(0.8)
-                              : Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          _statusMessage,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                Positioned(
+                  left: left,
+                  top: top,
+                  child: SizedBox(
+                    width: frameWidth,
+                    height: frameHeight,
+                    child: CustomPaint(
+                      painter: ScanFramePainter(
+                        isSuccess: _documentDetected,
                       ),
                     ),
+                  ),
+                ),
 
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: size.height * 0.10),
-                        child: Center(
-                          child: SizedBox(
-                            width: size.width * 0.85,
-                            height: size.height * 0.32,
-                            child: CustomPaint(
-                              painter: ScanFramePainter(
-                                isSuccess: _documentDetected,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                Positioned(
+                  top: 24,
+                  left: 24,
+                  right: 24,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
                     ),
-                  ],
+                    decoration: BoxDecoration(
+                      color: _documentDetected
+                          ? Colors.green.withOpacity(0.8)
+                          : Colors.black.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _statusMessage,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
 
                 if (_documentDetected && !_isCapturing)
@@ -452,108 +456,13 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
                     right: 0,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: Colors.green,
-                        strokeWidth: 6,
+                          color: Colors.green,
+                          strokeWidth: 6,
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-class ScanFramePainter extends CustomPainter {
-  final bool isSuccess;
-
-  ScanFramePainter({this.isSuccess = false});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = isSuccess ? Colors.green : Colors.white
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-
-    final cornerLength = 30.0;
-
-    void drawCorner(Offset start, Offset end1, Offset end2) {
-      canvas.drawLine(start, end1, paint);
-      canvas.drawLine(start, end2, paint);
-    }
-
-    drawCorner(Offset(0, 0), Offset(cornerLength, 0), Offset(0, cornerLength));
-    drawCorner(
-      Offset(size.width, 0),
-      Offset(size.width - cornerLength, 0),
-      Offset(size.width, cornerLength),
-    );
-    drawCorner(
-      Offset(0, size.height),
-      Offset(cornerLength, size.height),
-      Offset(0, size.height - cornerLength),
-    );
-    drawCorner(
-      Offset(size.width, size.height),
-      Offset(size.width - cornerLength, size.height),
-      Offset(size.width, size.height - cornerLength),
-    );
-
-    if (isSuccess) {
-      final glow = Paint()
-        ..color = Colors.green.withOpacity(0.3)
-        ..strokeWidth = 10
-        ..style = PaintingStyle.stroke
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
-      canvas.drawRect(Offset.zero & size, glow);
+                ],
+              ),
+      );
     }
   }
-
-  @override
-  bool shouldRepaint(covariant ScanFramePainter oldDelegate) =>
-      oldDelegate.isSuccess != isSuccess;
-}
-
-class OverlayPainter extends CustomPainter {
-  final bool captureSuccess;
-  final Size screenSize;
-
-  OverlayPainter({required this.captureSuccess, required this.screenSize});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final frameWidth = size.width * 0.85;
-    final frameHeight = size.height * 0.35;
-    final left = (size.width - frameWidth) / 2;
-    final top = (size.height - frameHeight) / 2;
-
-    final paint = Paint()
-      ..color = Colors.black.withOpacity(0.7)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, top), paint);
-    canvas.drawRect(
-      Rect.fromLTWH(
-        0,
-        top + frameHeight,
-        size.width,
-        size.height - (top + frameHeight),
-      ),
-      paint,
-    );
-    canvas.drawRect(Rect.fromLTWH(0, top, left, frameHeight), paint);
-    canvas.drawRect(
-      Rect.fromLTWH(
-        left + frameWidth,
-        top,
-        size.width - (left + frameWidth),
-        frameHeight,
-      ),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant OverlayPainter oldDelegate) =>
-      oldDelegate.captureSuccess != captureSuccess;
-}

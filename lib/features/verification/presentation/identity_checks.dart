@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/scan_doc.dart';
 import 'package:togoom/features/document/presentation/scan_doc_recto.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class IdentityVerificationPage extends StatelessWidget {
   IdentityVerificationPage({super.key});

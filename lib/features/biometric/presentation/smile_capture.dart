@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:togoom/shared/widgets/circular_frame_painter.dart';
 
 class SmileVerificationScreen extends StatefulWidget {
   final Function(Uint8List)? onSmileCaptured;
@@ -196,7 +197,7 @@ class _SmileVerificationScreenState extends State<SmileVerificationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("✓ Sourire capturé avec succès !"),
+            content: Text("Sourire capturé avec succès"),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -222,15 +223,27 @@ class _SmileVerificationScreenState extends State<SmileVerificationScreen> {
       body: Stack(
         children: [
           if (_isCameraInitialized)
-            SizedBox.expand(child: CameraPreview(_cameraController!))
+            Positioned.fill(
+              child: CameraPreview(_cameraController!),
+            )
           else
             const Center(child: CircularProgressIndicator(color: Colors.white)),
 
           CustomPaint(
             size: Size.infinite,
-            painter: CircularOverlayPainter(
+            painter: CircularFramePainter(
+              radiusRatio: 0.4,
+              overlayColor: Colors.black,
+              overlayOpacity: 0.65,
               circleColor: _isSmiling ? Colors.green : Colors.white,
-              smileProgress: _smileProgress,
+              circleStrokeWidth: 4.0,
+              isSuccess: _isSmiling,
+              successColor: Colors.green,
+              showGlow: false,
+              showProgressArc: true,
+              progressValue: _smileProgress,
+              progressStrokeWidth: 8.0,
+              progressArcOffset: 10.0,
             ),
           ),
 
@@ -425,57 +438,4 @@ class _SmileVerificationScreenState extends State<SmileVerificationScreen> {
       ),
     );
   }
-}
-
-class CircularOverlayPainter extends CustomPainter {
-  final Color circleColor;
-  final double smileProgress;
-
-  CircularOverlayPainter({
-    required this.circleColor,
-    required this.smileProgress,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.4;
-
-    canvas.saveLayer(null, Paint());
-
-    final overlayPaint = Paint()
-      ..color = Colors.black.withOpacity(0.65)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Offset.zero & size, overlayPaint);
-
-    canvas.drawCircle(center, radius, Paint()..blendMode = BlendMode.clear);
-
-    final circlePaint = Paint()
-      ..color = circleColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
-    canvas.drawCircle(center, radius, circlePaint);
-
-    if (smileProgress > 0) {
-      final progressPaint = Paint()
-        ..color = smileProgress >= 0.7 ? Colors.green : Colors.amber
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round;
-
-      final sweepAngle = 2 * 3.14159 * smileProgress;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius + 10),
-        -3.14159 / 2,
-        sweepAngle,
-        false,
-        progressPaint,
-      );
-    }
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

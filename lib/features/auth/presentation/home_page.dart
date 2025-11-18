@@ -5,7 +5,7 @@ import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/auth/presentation/demo_page_one.dart';
 import 'package:togoom/features/auth/presentation/start_page.dart';
 import 'package:togoom/features/auth/presentation/start_page_two.dart';
-import 'package:togoom/features/verification/language_service.dart';
+import 'package:togoom/shared/services/language_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);

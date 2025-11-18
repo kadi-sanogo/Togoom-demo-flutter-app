@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/verification/presentation/face_verify.dart';
+import 'package:togoom/shared/widgets/circular_frame_painter.dart';
 
 class FaceCaptureCamera extends StatefulWidget {
   final Function(String)? onFaceCaptured;
@@ -58,9 +59,11 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
 
     _cameraController = CameraController(
       frontCamera,
-      ResolutionPreset.medium,
+      ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.nv21,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
     );
 
     await _cameraController!.initialize();
@@ -315,89 +318,106 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
 
      body: Stack(
   children: [
-    Column(
-      children: [
-       
+    Positioned.fill(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: _cameraController!.value.previewSize!.height,
+          height: _cameraController!.value.previewSize!.width,
+          child: CameraPreview(_cameraController!),
+        ),
+      ),
+    ),
 
-        Expanded(
-          child: Stack(
-            alignment: Alignment.center,
+    LayoutBuilder(
+      builder: (context, constraints) {
+        return CustomPaint(
+          painter: CircularFramePainter(
+            radiusRatio: 0.4,
+            centerOffset: Offset(
+              constraints.maxWidth / 2,
+              constraints.maxHeight / 2.5,
+            ),
+            overlayColor: Colors.black,
+            overlayOpacity: 0.54,
+            circleColor: Colors.white,
+            circleStrokeWidth: 4.0,
+            isSuccess: _faceDetected,
+            successColor: Colors.green,
+            showGlow: true,
+            glowRadius: 5.0,
+            glowStrokeWidth: 8.0,
+          ),
+          size: Size.infinite,
+        );
+      },
+    ),
+
+    if (_isCapturing)
+      Container(
+        color: Colors.black54,
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              CameraPreview(_cameraController!),
-              CustomPaint(
-                painter: FaceCircleOverlayPainter(
-                  faceDetected: _faceDetected,
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 20),
+              Text(
+                'Capture en cours...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-                size: Size.infinite,
               ),
+            ],
+          ),
+        ),
+      ),
 
-              if (_isCapturing)
-                Container(
-                  color: Colors.black54,
-                  child: const Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(color: Colors.white),
-                        SizedBox(height: 20),
-                        Text(
-                          'Capture en cours...',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+    Positioned(
+      bottom: 20,
+      left: 20,
+      right: 20,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_faceDetected)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green, width: 2),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 10),
+                  Text(
+                    'Restez immobile...',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-            ],
-          ),
-        ),
-
-        Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              if (_faceDetected)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green, width: 2),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green),
-                      SizedBox(width: 10),
-                      Text(
-                        'Restez immobile...',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              const SizedBox(height: 10),
-
-              const Text(
-                'La photo sera prise automatiquement',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                ],
               ),
-            ],
+            ),
+
+          const SizedBox(height: 10),
+
+          const Text(
+            'La photo sera prise automatiquement',
+            style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
 
     Positioned(
@@ -414,48 +434,6 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
 ),
 
     );
-  }
-}
-
-class FaceCircleOverlayPainter extends CustomPainter {
-  final bool faceDetected;
-
-  FaceCircleOverlayPainter({required this.faceDetected});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double radius = size.width * 0.4;
-    final Offset center = Offset(size.width / 2, size.height / 2.5);
-
-    final Paint overlayPaint = Paint()
-      ..color = Colors.black54
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Offset.zero & size, overlayPaint);
-
-    canvas.saveLayer(Offset.zero & size, Paint());
-    canvas.drawRect(Offset.zero & size, overlayPaint);
-    final Paint clearPaint = Paint()..blendMode = BlendMode.clear;
-    canvas.drawCircle(center, radius, clearPaint);
-    canvas.restore();
-
-    final Paint circlePaint = Paint()
-      ..color = faceDetected ? Colors.green : Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
-    canvas.drawCircle(center, radius, circlePaint);
-
-    if (faceDetected) {
-      final Paint glowPaint = Paint()
-        ..color = Colors.green.withOpacity(0.3)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 8;
-      canvas.drawCircle(center, radius + 5, glowPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(FaceCircleOverlayPainter oldDelegate) {
-    return oldDelegate.faceDetected != faceDetected;
   }
 }
 
