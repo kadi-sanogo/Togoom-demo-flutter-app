@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("dev.flutter.flutter-gradle-plugin") // Flutter plugin
+    id("dev.flutter.flutter-gradle-plugin") 
 }
 
 android {
@@ -19,7 +19,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.tech5.safetynet"
+        //applicationId = "com.tech5.safetynet"
+applicationId = "com.togoom.togoom" 
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -28,7 +29,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("key.jks") // ton fichier keystore
+            storeFile = file("key.jks") 
             storePassword = "motdepasse"
             keyAlias = "alias"
             keyPassword = "motdepasse"

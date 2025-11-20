@@ -1,23 +1,34 @@
+import 'dart:convert';
 import 'dart:typed_data';
-
-import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/shared/services/language_service.dart';
 
 class VerificationSuccessPage extends StatelessWidget {
-  final String imagePath;
+  final String selfieImagePath;
+  final String? extractedPortraitBase64;
+  final String? extractedPortraitPath;   
 
   const VerificationSuccessPage({
     super.key,
-    required this.imagePath,
-    required Uint8List faceImage,
+    required this.selfieImagePath,
+    this.extractedPortraitBase64,
+    this.extractedPortraitPath,
   });
 
   @override
   Widget build(BuildContext context) {
+    Uint8List? portraitBytes;
+    if (extractedPortraitBase64 != null) {
+      try {
+        portraitBytes = base64Decode(extractedPortraitBase64!);
+      } catch (e) {
+        debugPrint("Échec du décodage base64 du portrait : $e");
+      }
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
-    final lang = LanguageService();
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -93,8 +104,12 @@ class VerificationSuccessPage extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildPhotoCircle(imagePath),
-                        _buildPhotoCircle(imagePath),
+                        // portrait extrait 
+                        portraitBytes != null
+                            ? _buildPhotoCircleFromBytes(portraitBytes)
+                            : _buildPlaceholderCircle(),
+                        //  image selfie
+                        _buildPhotoCircleFromFile(selfieImagePath),
                       ],
                     ),
                   ),
@@ -150,7 +165,22 @@ class VerificationSuccessPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPhotoCircle(String imagePath) {
+  Widget _buildPlaceholderCircle() {
+    return Container(
+      width: 125,
+      height: 125,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.grey, width: 2),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
+        ],
+      ),
+      child: const Icon(Icons.person, size: 60, color: Colors.grey),
+    );
+  }
+
+  Widget _buildPhotoCircleFromBytes(Uint8List bytes) {
     return Container(
       width: 125,
       height: 125,
@@ -164,42 +194,59 @@ class VerificationSuccessPage extends StatelessWidget {
       child: ClipOval(
         child: ColorFiltered(
           colorFilter: const ColorFilter.matrix([
-            1.5,
-            0,
-            0,
-            0,
-            50,
-            0,
-            1.5,
-            0,
-            0,
-            50,
-            0,
-            0,
-            1.5,
-            0,
-            50,
-            0,
-            0,
-            0,
-            1,
-            0,
+            1.5, 0, 0, 0, 50,
+            0, 1.5, 0, 0, 50,
+            0, 0, 1.5, 0, 50,
+            0, 0, 0, 1, 0,
           ]),
-          child: Container(
-            decoration: const BoxDecoration(color: Colors.transparent),
-            child: Image.file(
-              File(imagePath),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.person, size: 60, color: Colors.grey),
-                );
-              },
-            ),
+          child: Image.memory(
+            bytes,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[200],
+                child: const Icon(Icons.person, size: 60, color: Colors.grey),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoCircleFromFile(String imagePath) {
+    return Container(
+      width: 125,
+      height: 125,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.green, width: 4),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
+        ],
+      ),
+      child: ClipOval(
+        child: ColorFiltered(
+          colorFilter: const ColorFilter.matrix([
+            1.5, 0, 0, 0, 50,
+            0, 1.5, 0, 0, 50,
+            0, 0, 1.5, 0, 50,
+            0, 0, 0, 1, 0,
+          ]),
+          child: Image.file(
+            File(imagePath),
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[200],
+                child: const Icon(Icons.person, size: 60, color: Colors.grey),
+              );
+            },
           ),
         ),
       ),
     );
   }
 }
+
+

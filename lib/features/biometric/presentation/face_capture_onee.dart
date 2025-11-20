@@ -1,13 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/biometric/presentation/face_capture_two.dart';
 import 'package:togoom/features/verification/presentation/face_verify.dart';
-import 'package:togoom/shared/services/language_service.dart';
 
 class FaceCaptureScreenOne extends StatefulWidget {
-  const FaceCaptureScreenOne({super.key});
+  final String rectoImagePath;
+  final String extractedPortraitBase64;
+
+  const FaceCaptureScreenOne({
+    super.key,
+    required this.rectoImagePath,
+    required this.extractedPortraitBase64,
+  });
 
   @override
   State<FaceCaptureScreenOne> createState() => _FaceCaptureScreenState();
@@ -15,14 +22,14 @@ class FaceCaptureScreenOne extends StatefulWidget {
 
 class _FaceCaptureScreenState extends State<FaceCaptureScreenOne> {
   String? _capturedImagePath;
-final lang = LanguageService();
+
   void _openFaceCaptureTwoScreen() async {
     final capturedPath = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => FaceCaptureTwoScreen(
           onFaceCaptured: (path) {
-            Navigator.pop(context, path); 
+            Navigator.pop(context, path);
           },
         ),
       ),
@@ -36,20 +43,36 @@ final lang = LanguageService();
   }
 
   void _validatePhoto() async {
-    if (_capturedImagePath != null) {
-      final faceBytes = await File(_capturedImagePath!).readAsBytes();
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => VerificationSuccessPage(
-              faceImage: faceBytes, imagePath: _capturedImagePath!, 
-            ),
-          ),
-      );
-    } else {
+    if (_capturedImagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Veuillez d'abord prendre une photo")),
       );
+      return;
+    }
+
+   try {
+  final Uint8List faceBytes = base64Decode(widget.extractedPortraitBase64);
+
+  if (!mounted) return;
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => VerificationSuccessPage(
+        selfieImagePath: widget.rectoImagePath, 
+        extractedPortraitBase64: widget.extractedPortraitBase64, 
+        extractedPortraitPath: null, 
+      ),
+    ),
+  );
+}
+    catch (e) {
+      debugPrint("Erreur décodage photo: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Impossible de charger la photo d'identité")),
+        );
+      }
     }
   }
 
@@ -118,10 +141,7 @@ final lang = LanguageService();
                         height: 256,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.green,
-                            width: 3,
-                          ),
+                          border: Border.all(color: Colors.green, width: 3),
                           color: Colors.grey[100],
                         ),
                         child: _capturedImagePath != null
@@ -134,13 +154,7 @@ final lang = LanguageService();
                             : Center(
                                 child: InkWell(
                                   onTap: _openFaceCaptureTwoScreen,
-                                  child: const Image(
-                                    image: AssetImage(
-                                        "assets/icons/svg/camera-01.png"),
-                                    width: 45,
-                                    height: 45,
-                                    color: Colors.black,
-                                  ),
+                                  child: const Icon(Icons.camera, size: 45, color: Colors.black),
                                 ),
                               ),
                       ),
@@ -189,10 +203,7 @@ final lang = LanguageService();
                 ),
                 child: const Text(
                   'Valider',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -202,5 +213,3 @@ final lang = LanguageService();
     );
   }
 }
-
-

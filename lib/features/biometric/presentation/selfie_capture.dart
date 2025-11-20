@@ -5,7 +5,6 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/document/presentation/results_screen.dart';
 
 class SelfieCaptureScreen extends StatefulWidget {
   final File documentImage;
@@ -53,7 +52,7 @@ class _SelfieCaptureScreenState extends State<SelfieCaptureScreen> {
       final file = File('${appDir.path}/selfie.jpg');
       await selfie.saveTo(file.path);
 
-      Navigator.push(
+     /* Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ResultsScreen(
@@ -61,7 +60,7 @@ class _SelfieCaptureScreenState extends State<SelfieCaptureScreen> {
             selfieImage: file,
           ),
         ),
-      );
+      );*/
     } catch (e) {
       Fluttertoast.showToast(msg: "Erreur lors de la capture du selfie");
     }

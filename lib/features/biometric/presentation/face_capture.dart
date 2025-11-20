@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -7,13 +7,21 @@ import 'package:flutter_svg/svg.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:togoom/core/theme/app_colors.dart';
+import 'package:togoom/features/document/presentation/photo_extractor.dart';
 import 'package:togoom/features/verification/presentation/face_verify.dart';
 import 'package:togoom/shared/widgets/circular_frame_painter.dart';
 
 class FaceCaptureCamera extends StatefulWidget {
   final Function(String)? onFaceCaptured;
+  final String? idCardRectoPath;
+  final String? extractedPortraitBase64;
 
-  const FaceCaptureCamera({super.key, this.onFaceCaptured});
+  FaceCaptureCamera({
+    super.key,
+    this.onFaceCaptured,
+    this.idCardRectoPath,
+    this.extractedPortraitBase64,
+  });
 
   @override
   State<FaceCaptureCamera> createState() => _FaceCaptureCameraState();
@@ -149,33 +157,46 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
 
     setState(() => _isCapturing = true);
 
-    try {
-      await _cameraController!.stopImageStream();
-      await Future.delayed(const Duration(milliseconds: 300));
+   try {
+  await _cameraController!.stopImageStream();
+  await Future.delayed(const Duration(milliseconds: 300));
 
-      final XFile picture = await _cameraController!.takePicture();
-      final path = picture.path;
-      final faceBytes = await picture.readAsBytes();
+  final XFile picture = await _cameraController!.takePicture();
+  final String selfiePath = picture.path;
 
-      if (widget.onFaceCaptured != null) {
-        widget.onFaceCaptured!(path);
-      }
+  if (widget.onFaceCaptured != null) {
+    widget.onFaceCaptured!(selfiePath);
+  }
 
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                VerificationSuccessPage(faceImage: faceBytes, imagePath: path),
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint("Erreur capture : $e");
+  // If an ID card recto path is provided, extract the portrait before navigating.
+  final extractionResult = widget.idCardRectoPath != null
+      ? await PhotoExtractor.extractPortraitFromRecto(
+          widget.idCardRectoPath!,
+        )
+      : null;
 
+  if (mounted) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VerificationSuccessPage(
+          selfieImagePath: selfiePath,
+          extractedPortraitBase64: extractionResult?.base64Photo, 
+          extractedPortraitPath: extractionResult?.savedFilePath, 
+        ),
+      ),
+    );
+  }
+}
+    catch (e, st) {
+      debugPrint('Error capturing face: $e\n$st');
+    } finally {
       if (mounted) {
         setState(() => _isCapturing = false);
-        _cameraController?.startImageStream(_processCameraImage);
+        try {
+          _cameraController?.startImageStream(_processCameraImage);
+        } catch (_) {
+        }
       }
     }
   }
@@ -291,7 +312,7 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
 
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(90), 
+        preferredSize: const Size.fromHeight(90),
         child: AppBar(
           backgroundColor: AppColors.primary,
           leading: IconButton(
@@ -316,123 +337,122 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
         ),
       ),
 
-     body: Stack(
-  children: [
-    Positioned.fill(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: _cameraController!.value.previewSize!.height,
-          height: _cameraController!.value.previewSize!.width,
-          child: CameraPreview(_cameraController!),
-        ),
-      ),
-    ),
-
-    LayoutBuilder(
-      builder: (context, constraints) {
-        return CustomPaint(
-          painter: CircularFramePainter(
-            radiusRatio: 0.4,
-            centerOffset: Offset(
-              constraints.maxWidth / 2,
-              constraints.maxHeight / 2.5,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _cameraController!.value.previewSize!.height,
+                height: _cameraController!.value.previewSize!.width,
+                child: CameraPreview(_cameraController!),
+              ),
             ),
-            overlayColor: Colors.black,
-            overlayOpacity: 0.54,
-            circleColor: Colors.white,
-            circleStrokeWidth: 4.0,
-            isSuccess: _faceDetected,
-            successColor: Colors.green,
-            showGlow: true,
-            glowRadius: 5.0,
-            glowStrokeWidth: 8.0,
           ),
-          size: Size.infinite,
-        );
-      },
-    ),
 
-    if (_isCapturing)
-      Container(
-        color: Colors.black54,
-        child: const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: Colors.white),
-              SizedBox(height: 20),
-              Text(
-                'Capture en cours...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return CustomPaint(
+                painter: CircularFramePainter(
+                  radiusRatio: 0.4,
+                  centerOffset: Offset(
+                    constraints.maxWidth / 2,
+                    constraints.maxHeight / 2.5,
+                  ),
+                  overlayColor: Colors.black,
+                  overlayOpacity: 0.54,
+                  circleColor: Colors.white,
+                  circleStrokeWidth: 4.0,
+                  isSuccess: _faceDetected,
+                  successColor: Colors.green,
+                  showGlow: true,
+                  glowRadius: 5.0,
+                  glowStrokeWidth: 8.0,
+                ),
+                size: Size.infinite,
+              );
+            },
+          ),
+
+          if (_isCapturing)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 20),
+                    Text(
+                      'Capture en cours...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-
-    Positioned(
-      bottom: 20,
-      left: 20,
-      right: 20,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_faceDetected)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green, width: 2),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 10),
-                  Text(
-                    'Restez immobile...',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
             ),
 
-          const SizedBox(height: 10),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_faceDetected)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green, width: 2),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green),
+                        SizedBox(width: 10),
+                        Text(
+                          'Restez immobile...',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-          const Text(
-            'La photo sera prise automatiquement',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+                const SizedBox(height: 10),
+
+                const Text(
+                  'La photo sera prise automatiquement',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+
+          Positioned(
+            bottom: 25,
+            right: 25,
+            child: FloatingActionButton(
+              mini: true,
+              backgroundColor: AppColors.primary,
+              onPressed: _showInstructionPopup2,
+              child: const Icon(Icons.help_outline, color: Colors.white),
+            ),
           ),
         ],
       ),
-    ),
-
-    Positioned(
-      bottom: 25,
-      right: 25,
-      child: FloatingActionButton(
-        mini: true,
-        backgroundColor: AppColors.primary,
-        onPressed: _showInstructionPopup2,
-        child: const Icon(Icons.help_outline, color: Colors.white),
-      ),
-    ),
-  ],
-),
-
     );
   }
 }

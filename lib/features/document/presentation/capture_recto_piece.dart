@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/capture_verso_piece.dart';
+import 'package:togoom/features/document/presentation/photo_extractor.dart';
 import 'package:togoom/features/document/presentation/piece_result.dart';
 import 'package:togoom/shared/widgets/overlay_painter.dart';
 import 'package:togoom/shared/widgets/scan_frame_painter.dart';
@@ -32,7 +33,9 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
   bool _documentDetected = false;
 
   final TextRecognizer _textRecognizer = TextRecognizer();
-  final DocumentDetector _documentDetector = DocumentDetector(requiredDetections: 3);
+  final DocumentDetector _documentDetector = DocumentDetector(
+    requiredDetections: 3,
+  );
 
   @override
   void initState() {
@@ -93,7 +96,10 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
       _isProcessing = true;
 
       try {
-        final inputImage = CameraImageConverter.convertToInputImage(image, _cameraController!);
+        final inputImage = CameraImageConverter.convertToInputImage(
+          image,
+          _cameraController!,
+        );
         if (inputImage != null) {
           final recognizedText = await _textRecognizer.processImage(inputImage);
           await _analyzeDocument(recognizedText);
@@ -131,25 +137,34 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
     });
 
     try {
-      await _cameraController?.stopImageStream();
-      await Future.delayed(const Duration(milliseconds: 500));
-      final XFile image = await _cameraController!.takePicture();
+  await _cameraController?.stopImageStream();
+  await Future.delayed(const Duration(milliseconds: 500));
+  final XFile image = await _cameraController!.takePicture();
 
-      final inputImage = InputImage.fromFilePath(image.path);
-      final recognizedText = await _textRecognizer.processImage(inputImage);
+  final inputImage = InputImage.fromFilePath(image.path);
+  final recognizedText = await _textRecognizer.processImage(inputImage);
 
-      final data = DocumentData();
-      data.rectoImagePath = image.path;
+  final data = DocumentData();
+  data.rectoImagePath = image.path;
 
-      DocumentTextExtractor.extractRectoData(recognizedText.text, data);
+  DocumentTextExtractor.extractRectoData(recognizedText.text, data);
 
-      debugPrint(" Données extraites : ${data.toString()}");
+  debugPrint("Extraction de la photo d'identité...");
+  final photoResult = await PhotoExtractor.extractPortraitFromRecto(image.path);
+  data.portrait = photoResult?.base64Photo;
 
-      //  popup
-      if (mounted) {
-        _showVersoDialog(data);
-      }
-    } catch (e) {
+  if (data.portrait != null) {
+    debugPrint(" Photo d'identité extraite avec succès");
+  } else {
+    debugPrint(" Impossible d'extraire la photo d'identité");
+  }
+
+  debugPrint(" Données extraites : ${data.toString()}");
+
+  if (mounted) {
+    _showVersoDialog(data);
+  }
+} catch (e) {
       debugPrint(" Erreur capture : $e");
       if (mounted) {
         _documentDetector.reset();
@@ -283,18 +298,14 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      // Capturer le navigator context avant de pop
                       final navigator = Navigator.of(context);
                       final parentContext = navigator.context;
 
                       navigator.pop();
 
-                      // Libérer la caméra avant de naviguer
-                      // Note: stopImageStream déjà appelé dans _captureAndProcess
                       await _cameraController?.dispose();
                       _cameraController = null;
 
-                      // Petit délai pour s'assurer que la caméra est libérée
                       await Future.delayed(const Duration(milliseconds: 300));
 
                       if (mounted && parentContext.mounted) {
@@ -328,18 +339,14 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
 
                 TextButton(
                   onPressed: () async {
-                    // Capturer le navigator context avant de pop
                     final navigator = Navigator.of(context);
                     final parentContext = navigator.context;
 
                     navigator.pop();
 
-                    // Libérer la caméra avant de naviguer
-                    // Note: stopImageStream déjà appelé dans _captureAndProcess
                     await _cameraController?.dispose();
                     _cameraController = null;
 
-                    // Petit délai pour s'assurer que la caméra est libérée
                     await Future.delayed(const Duration(milliseconds: 300));
 
                     if (mounted && parentContext.mounted) {
@@ -386,24 +393,20 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    // Dimensions du cadre
     const double frameWidthRatio = 0.95;
     const double frameHeightRatio = 0.28;
     final double frameWidth = size.width * frameWidthRatio;
     final double frameHeight = size.height * frameHeightRatio;
 
-    // Calcul de la position exacte du cadre
     const double statusPadding = 24.0;
-    const double statusContainerHeight =
-        60.0; // Approximation hauteur du message
+    const double statusContainerHeight = 60.0;
     const double bottomPaddingRatio = 0.11;
 
-    final double topOffset = 0; //statusPadding + statusContainerHeight;
+    final double topOffset = 0;
     final double availableHeight = size.height - topOffset;
     final double bottomPadding = size.height * bottomPaddingRatio;
     final double centerSpace = availableHeight - bottomPadding;
 
-    // Position verticale du cadre (centré dans l'espace disponible)
     final double frameTop = topOffset + (centerSpace - frameHeight) / 2;
     final double frameLeft = (size.width - frameWidth) / 2;
 
@@ -487,18 +490,6 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                     ),
                   ),
                 ),
-                if (_documentDetected && !_isCapturing)
-                  Positioned(
-                    bottom: 40,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.green,
-                        strokeWidth: 6,
-                      ),
-                    ),
-                  ),
               ],
             ),
     );
