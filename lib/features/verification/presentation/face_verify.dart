@@ -38,7 +38,7 @@ class VerificationSuccessPage extends StatelessWidget {
         title: const Column(
           children: [
             Text(
-              'TOGGOM',
+              'TOGOOM',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
@@ -48,7 +48,7 @@ class VerificationSuccessPage extends StatelessWidget {
             ),
             SizedBox(height: 4),
             Text(
-              'Créer un cryptographe',
+              'Vérification faciale',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.white70,
@@ -192,23 +192,15 @@ class VerificationSuccessPage extends StatelessWidget {
         ],
       ),
       child: ClipOval(
-        child: ColorFiltered(
-          colorFilter: const ColorFilter.matrix([
-            1.5, 0, 0, 0, 50,
-            0, 1.5, 0, 0, 50,
-            0, 0, 1.5, 0, 50,
-            0, 0, 0, 1, 0,
-          ]),
-          child: Image.memory(
-            bytes,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.person, size: 60, color: Colors.grey),
-              );
-            },
-          ),
+        child: Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[200],
+              child: const Icon(Icons.person, size: 60, color: Colors.grey),
+            );
+          },
         ),
       ),
     );
@@ -226,23 +218,15 @@ class VerificationSuccessPage extends StatelessWidget {
         ],
       ),
       child: ClipOval(
-        child: ColorFiltered(
-          colorFilter: const ColorFilter.matrix([
-            1.5, 0, 0, 0, 50,
-            0, 1.5, 0, 0, 50,
-            0, 0, 1.5, 0, 50,
-            0, 0, 0, 1, 0,
-          ]),
-          child: Image.file(
-            File(imagePath),
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.person, size: 60, color: Colors.grey),
-              );
-            },
-          ),
+        child: Image.file(
+          File(imagePath),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[200],
+              child: const Icon(Icons.person, size: 60, color: Colors.grey),
+            );
+          },
         ),
       ),
     );

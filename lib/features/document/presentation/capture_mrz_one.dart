@@ -9,6 +9,8 @@ import 'package:togoom/features/document/presentation/document_data.dart';
 import 'package:togoom/features/document/presentation/mrz_detection.dart';
 import 'package:togoom/shared/widgets/overlay_painter.dart';
 import 'package:togoom/shared/widgets/mrz_frame_painter.dart';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
@@ -33,7 +35,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
   bool _isCapturing = false;
   bool _mrzDetected = false;
   int _detectionCount = 0;
-  static const int _requiredDetections = 3;
+  static const int _requiredDetections = 1;
   
   MrzData? _detectedMrzData;
   String? _capturedMrzImagePath;
@@ -246,11 +248,14 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
     try {
       await _cameraController?.stopImageStream();
       await Future.delayed(const Duration(milliseconds: 500));
-      
-      final XFile imageFile = await _cameraController!.takePicture();
-      _capturedMrzImagePath = imageFile.path;
 
-      final finalMrzData = await MrzExtractor.extractFromImage(imageFile.path);
+      final XFile imageFile = await _cameraController!.takePicture();
+
+      // Recadrer l'image sur la zone du cadre MRZ
+      final croppedPath = await _cropToFrameArea(imageFile.path);
+      _capturedMrzImagePath = croppedPath;
+
+      final finalMrzData = await MrzExtractor.extractFromImage(croppedPath);
 
       if (finalMrzData != null && finalMrzData.isValid) {
         widget.documentData.versoImagePath = imageFile.path;
@@ -316,6 +321,55 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
         });
         _startMrzDetection();
       }
+    }
+  }
+
+  Future<String> _cropToFrameArea(String imagePath) async {
+    try {
+      final originalFile = File(imagePath);
+      final originalBytes = await originalFile.readAsBytes();
+      final originalImage = img.decodeImage(originalBytes);
+
+      if (originalImage == null) {
+        return imagePath;
+      }
+
+      final imageWidth = originalImage.width;
+      final imageHeight = originalImage.height;
+
+      // Le cadre MRZ est au centre-bas de l'écran
+      // Prendre la bande centrale (90% largeur) à ~50% du haut (20% hauteur)
+      final cropLeft = (imageWidth * 0.05).toInt();  // 5% de marge de chaque côté
+      final cropTop = (imageHeight * 0.45).toInt();  // Commence à 45%
+      final cropWidth = (imageWidth * 0.90).toInt(); // 90% de largeur
+      final cropHeight = (imageHeight * 0.20).toInt(); // 20% de hauteur
+
+      final safeLeft = cropLeft.clamp(0, imageWidth - 1);
+      final safeTop = cropTop.clamp(0, imageHeight - 1);
+      final safeWidth = cropWidth.clamp(1, imageWidth - safeLeft);
+      final safeHeight = cropHeight.clamp(1, imageHeight - safeTop);
+
+      debugPrint("Image: ${imageWidth}x${imageHeight}");
+      debugPrint("Crop: left=$safeLeft, top=$safeTop, w=$safeWidth, h=$safeHeight");
+
+      final croppedImage = img.copyCrop(
+        originalImage,
+        x: safeLeft,
+        y: safeTop,
+        width: safeWidth,
+        height: safeHeight,
+      );
+
+      final tempDir = await getTemporaryDirectory();
+      final croppedPath = '${tempDir.path}/mrz_cropped_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final croppedFile = File(croppedPath);
+      await croppedFile.writeAsBytes(img.encodeJpg(croppedImage, quality: 95));
+
+      debugPrint("Image recadrée : $croppedPath");
+      return croppedPath;
+    } catch (e) {
+      debugPrint("Erreur recadrage : $e");
+      return imagePath;
     }
   }
 
@@ -460,7 +514,7 @@ class _CaptureMrzOneState extends State<CaptureMrzOne>
   bool _isCapturing = false;
   bool _documentDetected = false;
   int _detectionCount = 0;
-  static const int _requiredDetections = 3;
+  static const int _requiredDetections = 1;
   String? _extractedPortraitPath;
 
   final TextRecognizer _textRecognizer = TextRecognizer();

@@ -20,171 +20,179 @@ class _CaptureFootprintsState extends State<CaptureFootprints> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        toolbarHeight: 120,
+        elevation: 0,
         centerTitle: true,
-        title: const Column(
-          children: [
-            Text(
-              'TOGOOM',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-                color: Colors.white,
-                letterSpacing: 1.2,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Créer un cryptographe',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ],
+        title: const Text(
+          'Capture d\'empreintes',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.white,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
 
-            const Text(
-              'Capture de vos empreintes',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+              Icon(
+                Icons.fingerprint,
+                size: 80,
+                color: AppColors.primary,
               ),
-              textAlign: TextAlign.center,
-            ),
 
-            const SizedBox(height: 10),
+              const SizedBox(height: 24),
 
-            Container(
-              width: 406,
-              height: 268,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
+              const Text(
+                'Capture de vos empreintes',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
               ),
-              child: Column(
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Suivez les instructions ci-dessous',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 32),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Column(
+                  children: [
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/four-finger-02.svg',
+                      text: 'Étendez et gardez les doigts ensemble',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/camera-ai.svg',
+                      text: 'Placez vos doigts devant la caméra',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/2nd-bracket.svg',
+                      text: "Restez immobile à l'intérieur du rectangle",
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInstructionItem(
+                      iconAsset: 'assets/icons/svg/loading-02.svg',
+                      text: "Attendez la capture automatique",
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _dontShowAgain = !_dontShowAgain;
+                  });
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: _dontShowAgain ? AppColors.primary : Colors.white,
+                        border: Border.all(
+                          color: _dontShowAgain ? AppColors.primary : Colors.grey[400]!,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: _dontShowAgain
+                          ? const Icon(Icons.check, size: 16, color: Colors.white)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Ne plus afficher cette page',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FootprintsCaptureTwo(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Commencer',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildInstructionItem(
-                    iconAsset: 'assets/icons/svg/four-finger-02.svg',
-                    text: 'Étendez et gardez les doigts ensemble',
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildInstructionItem(
-                    iconAsset: 'assets/icons/svg/camera-ai.svg',
-                    text: 'Placez vos doigts devant la caméra',
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildInstructionItem(
-                    iconAsset: 'assets/icons/svg/2nd-bracket.svg',
-                    text: "Restez immobile à l'intérieur du rectangle",
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildInstructionItem(
-                    iconAsset: 'assets/icons/svg/loading-02.svg',
-                    text:
-                        "Attendez la capture automatique (jusqu'à ce que le flash se déclenche)",
+                  Icon(Icons.lock_outline, size: 14, color: Colors.grey[500]),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Vos données sont sécurisées',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    ),
                   ),
                 ],
               ),
-            ),
 
-            const SizedBox(height: 10),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const Text(
-                  'Ne me le montrez plus',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _dontShowAgain = !_dontShowAgain;
-                    });
-                  },
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: _dontShowAgain ? AppColors.primary : Colors.white,
-                      border: Border.all(
-                        color: _dontShowAgain ? AppColors.primary : Colors.grey,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: _dontShowAgain
-                        ? const Icon(Icons.check, size: 14, color: Colors.white)
-                        : null,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FootprintsCaptureTwo(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.secondary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Commencer',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            const Text(
-              'Vos données sont sécurisées et ne seront utilisées que pour la vérification d\'identité.',
-              style: TextStyle(fontSize: 12, color: Colors.black),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );

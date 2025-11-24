@@ -168,21 +168,26 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
     widget.onFaceCaptured!(selfiePath);
   }
 
-  // If an ID card recto path is provided, extract the portrait before navigating.
-  final extractionResult = widget.idCardRectoPath != null
-      ? await PhotoExtractor.extractPortraitFromRecto(
-          widget.idCardRectoPath!,
-        )
-      : null;
+  // Use already extracted portrait if available, otherwise extract from recto path
+  String? portraitBase64 = widget.extractedPortraitBase64;
+  String? portraitPath;
+
+  if (portraitBase64 == null && widget.idCardRectoPath != null) {
+    final extractionResult = await PhotoExtractor.extractPortraitFromRecto(
+      widget.idCardRectoPath!,
+    );
+    portraitBase64 = extractionResult?.base64Photo;
+    portraitPath = extractionResult?.savedFilePath;
+  }
 
   if (mounted) {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => VerificationSuccessPage(
           selfieImagePath: selfiePath,
-          extractedPortraitBase64: extractionResult?.base64Photo, 
-          extractedPortraitPath: extractionResult?.savedFilePath, 
+          extractedPortraitBase64: portraitBase64,
+          extractedPortraitPath: portraitPath,
         ),
       ),
     );
@@ -324,12 +329,12 @@ class _FaceCaptureCameraState extends State<FaceCaptureCamera> {
             children: [
               const Text(
                 'Vérification faciale',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white, fontSize: 18),
               ),
               const SizedBox(height: 4),
               Text(
-                'Positionnez votre visage dans le cercle',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                'Étape 2/2 - Capture du visage',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ],
           ),

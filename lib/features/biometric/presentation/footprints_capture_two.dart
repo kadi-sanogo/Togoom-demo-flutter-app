@@ -197,52 +197,35 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
       return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.all(20),
-        content: SizedBox(
-          width: 350,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Instructions",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-
-              Container(
-                width: 406,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    _buildInstructionItem(
-                      iconAsset: 'assets/icons/svg/four-finger-02.svg',
-                      text: 'Étendez et gardez les doigts ensemble',
-                    ),
-                    const SizedBox(height: 20),
-                    _buildInstructionItem(
-                      iconAsset: 'assets/icons/svg/camera-ai.svg',
-                      text: 'Placez vos doigts devant la caméra',
-                    ),
-                    const SizedBox(height: 20),
-                    _buildInstructionItem(
-                      iconAsset: 'assets/icons/svg/2nd-bracket.svg',
-                      text: "Restez immobile à l'intérieur du rectangle",
-                    ),
-                    const SizedBox(height: 20),
-                    _buildInstructionItem(
-                      iconAsset: 'assets/icons/svg/loading-02.svg',
-                      text:
-                          "Attendez la capture automatique (jusqu'à ce que le flash se déclenche)",
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Instructions",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            _buildInstructionItem(
+              iconAsset: 'assets/icons/svg/four-finger-02.svg',
+              text: 'Étendez et gardez les doigts ensemble',
+            ),
+            const SizedBox(height: 16),
+            _buildInstructionItem(
+              iconAsset: 'assets/icons/svg/camera-ai.svg',
+              text: 'Placez vos doigts devant la caméra',
+            ),
+            const SizedBox(height: 16),
+            _buildInstructionItem(
+              iconAsset: 'assets/icons/svg/2nd-bracket.svg',
+              text: "Restez immobile à l'intérieur du rectangle",
+            ),
+            const SizedBox(height: 16),
+            _buildInstructionItem(
+              iconAsset: 'assets/icons/svg/loading-02.svg',
+              text: "Attendez la capture automatique",
+            ),
+          ],
         ),
-
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -308,29 +291,15 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
 
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        toolbarHeight: 100,
+        elevation: 0,
         centerTitle: true,
-        title: const Column(
-          children: [
-            Text(
-              'TOGGOM',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Colors.white,
-                letterSpacing: 1.2,
-              ),
-            ),
-            SizedBox(height: 2),
-            Text(
-              "Créer un cryptographe",
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ],
+        title: const Text(
+          'Capture d\'empreintes',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.white,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -345,63 +314,58 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
   }
 
   Widget _buildInstructionScreen() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 60),
-          const Text(
-            'Placez vos 4 doigts devant la caméra',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Placez vos 4 doigts devant la caméra',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Index, majeur, annulaire et auriculaire',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-          const SizedBox(height: 40),
+            const SizedBox(height: 10),
+            const Text(
+              'Index, majeur, annulaire et auriculaire',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 40),
 
-          GestureDetector(
-            onTap: _openCamera,
-            child: Container(
-              width: 300,
-              height: 400,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey, width: 2),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.fingerprint,
-                          size: 80,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Appuyez pour scanner',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
-                      ],
+            GestureDetector(
+              onTap: _openCamera,
+              child: Container(
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height * 0.45,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey[300]!, width: 2),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.fingerprint,
+                      size: 80,
+                      color: Colors.grey[400],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    Text(
+                      'Appuyez pour scanner',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -413,8 +377,8 @@ class _FootprintsCaptureTwoState extends State<FootprintsCaptureTwo> {
         Container(color: Colors.black.withOpacity(0.7)),
         Center(
           child: Container(
-            width: 300,
-            height: 500,
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: MediaQuery.of(context).size.height * 0.6,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: _getBorderColor(), width: 3),

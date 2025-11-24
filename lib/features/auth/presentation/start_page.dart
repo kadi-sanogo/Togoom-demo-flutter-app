@@ -5,11 +5,12 @@ import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:togoom/core/theme/app_colors.dart';
 import 'package:togoom/features/document/presentation/capture_mrz_one.dart';
-import 'package:togoom/features/document/presentation/capture_recto_piece.dart';
+import 'package:togoom/features/document/presentation/capture_document_page.dart';
 import 'package:togoom/features/document/presentation/document_data.dart';
 import 'package:togoom/features/verification/presentation/cryptographe_one.dart';
 import 'package:togoom/features/biometric/presentation/eye_capture.dart';
 import 'package:togoom/features/biometric/presentation/face_capture.dart';
+import 'package:togoom/features/verification/presentation/face_verification_flow.dart';
 import 'package:togoom/features/biometric/presentation/footprints_capture_two.dart';
 import 'package:togoom/features/biometric/presentation/icao_screen.dart';
 import 'package:togoom/features/auth/presentation/setting_page.dart';
@@ -158,11 +159,7 @@ class StartPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => FaceCaptureCamera(
-                              onFaceCaptured: (String imagePath) {
-                                print('Photo capturée : $imagePath');
-                              },
-                            ),
+                            builder: (context) => const FaceVerificationIdCapture(),
                           ),
                         );
                       } else if (feature.title ==

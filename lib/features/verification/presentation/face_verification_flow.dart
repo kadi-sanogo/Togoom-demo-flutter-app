@@ -2,38 +2,38 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/document/presentation/piece_result.dart';
+import 'package:togoom/features/biometric/presentation/face_capture.dart';
+import 'package:togoom/features/document/presentation/photo_extractor.dart';
 import 'package:togoom/shared/widgets/overlay_painter.dart';
 import 'package:togoom/shared/widgets/scan_frame_painter.dart';
 import 'package:togoom/shared/utils/camera_image_converter.dart';
 import 'package:togoom/shared/utils/document_detector.dart';
-import 'package:togoom/shared/utils/document_text_extractor.dart';
-import 'document_data.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
-class CaptureVersoPage extends StatefulWidget {
-  final DocumentData documentData;
-  const CaptureVersoPage({Key? key, required this.documentData})
-      : super(key: key);
+/// Page de capture de pièce d'identité pour la vérification faciale
+/// Capture uniquement le recto, extrait le portrait, puis passe à la capture du visage
+class FaceVerificationIdCapture extends StatefulWidget {
+  const FaceVerificationIdCapture({Key? key}) : super(key: key);
 
   @override
-  State<CaptureVersoPage> createState() => _CaptureVersoPageState();
+  State<FaceVerificationIdCapture> createState() => _FaceVerificationIdCaptureState();
 }
 
-class _CaptureVersoPageState extends State<CaptureVersoPage>
+class _FaceVerificationIdCaptureState extends State<FaceVerificationIdCapture>
     with SingleTickerProviderStateMixin {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isProcessing = false;
-  String _statusMessage = "Placez le verso de votre pièce d'identité dans le cadre";
+  String _statusMessage = "Placez votre pièce d'identité dans le cadre";
   late AnimationController _animationController;
-  late Animation<double> _scanAnimation;
 
   bool _isCapturing = false;
   bool _documentDetected = false;
 
   final TextRecognizer _textRecognizer = TextRecognizer();
-  final DocumentDetector _documentDetector = DocumentDetector(requiredDetections: 3);
+  final DocumentDetector _documentDetector = DocumentDetector(
+    requiredDetections: 1,
+  );
 
   @override
   void initState() {
@@ -44,10 +44,6 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _scanAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_animationController);
     _initializeCamera();
   }
 
@@ -95,7 +91,10 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
       _isProcessing = true;
 
       try {
-        final inputImage = CameraImageConverter.convertToInputImage(image, _cameraController!);
+        final inputImage = CameraImageConverter.convertToInputImage(
+          image,
+          _cameraController!,
+        );
         if (inputImage != null) {
           final recognizedText = await _textRecognizer.processImage(inputImage);
           await _analyzeDocument(recognizedText);
@@ -112,7 +111,7 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
   Future<void> _analyzeDocument(RecognizedText recognizedText) async {
     if (_isCapturing) return;
 
-    final result = _documentDetector.analyzeVersoDocument(recognizedText);
+    final result = _documentDetector.analyzeRectoDocument(recognizedText);
 
     setState(() {
       _documentDetected = result.detected;
@@ -129,7 +128,7 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
 
     setState(() {
       _isCapturing = true;
-      _statusMessage = " Capture en cours...";
+      _statusMessage = "Capture en cours...";
     });
 
     try {
@@ -137,26 +136,50 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
       await Future.delayed(const Duration(milliseconds: 500));
       final XFile image = await _cameraController!.takePicture();
 
-      final inputImage = InputImage.fromFilePath(image.path);
-      final recognizedText = await _textRecognizer.processImage(inputImage);
+      debugPrint("Image capturée : ${image.path}");
 
-      widget.documentData.versoImagePath = image.path;
+      // Extraction du portrait
+      setState(() {
+        _statusMessage = "Extraction du portrait...";
+      });
 
-      DocumentTextExtractor.extractVersoData(recognizedText.text, widget.documentData);
+      final photoResult = await PhotoExtractor.extractPortraitFromRecto(image.path);
 
-      debugPrint("✓ Verso capturé : ${image.path}");
-      debugPrint("✓ Données verso extraites");
+      if (photoResult?.base64Photo != null) {
+        debugPrint("Portrait extrait avec succès");
 
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OCRResultsPage(documentData: widget.documentData),
-          ),
-        );
+        if (mounted) {
+          // Naviguer vers la capture du visage avec le portrait extrait
+          await _cameraController?.dispose();
+          _cameraController = null;
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FaceCaptureCamera(
+                idCardRectoPath: image.path,
+                extractedPortraitBase64: photoResult!.base64Photo,
+                onFaceCaptured: (String path) {
+                  debugPrint("Visage capturé : $path");
+                },
+              ),
+            ),
+          );
+        }
+      } else {
+        debugPrint("Impossible d'extraire le portrait");
+        if (mounted) {
+          _documentDetector.reset();
+          setState(() {
+            _isCapturing = false;
+            _documentDetected = false;
+            _statusMessage = "Portrait non détecté. Réessayez.";
+          });
+          _startDocumentDetection();
+        }
       }
     } catch (e) {
-      debugPrint("Erreur capture verso : $e");
+      debugPrint("Erreur capture : $e");
       if (mounted) {
         _documentDetector.reset();
         setState(() {
@@ -187,23 +210,19 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    // Dimensions du cadre
     const double frameWidthRatio = 0.95;
     const double frameHeightRatio = 0.28;
     final double frameWidth = size.width * frameWidthRatio;
     final double frameHeight = size.height * frameHeightRatio;
 
-    // Calcul de la position exacte du cadre
     const double statusPadding = 24.0;
-    const double statusContainerHeight = 60.0; // Approximation hauteur du message
     const double bottomPaddingRatio = 0.11;
 
-    final double topOffset = 0; //statusPadding + statusContainerHeight;
+    final double topOffset = 0;
     final double availableHeight = size.height - topOffset;
     final double bottomPadding = size.height * bottomPaddingRatio;
     final double centerSpace = availableHeight - bottomPadding;
 
-    // Position verticale du cadre (centré dans l'espace disponible)
     final double frameTop = topOffset + (centerSpace - frameHeight) / 2;
     final double frameLeft = (size.width - frameWidth) / 2;
 
@@ -212,9 +231,18 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        title: const Text(
-          "Scanner le verso",
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              "Vérification faciale",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            Text(
+              "Étape 1/2 - Pièce d'identité",
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
         ),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -225,15 +253,20 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Stack(
               children: [
-                Positioned.fill(
-                  child: CameraPreview(_cameraController!),
-                ),
+                Positioned.fill(child: CameraPreview(_cameraController!)),
 
-                CustomPaint(
-                  size: Size(size.width, size.height),
-                  painter: OverlayPainter(
-                    captureSuccess: _documentDetected,
-                    frameRect: Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight),
+                Positioned.fill(
+                  child: CustomPaint(
+                    size: Size(size.width, size.height),
+                    painter: OverlayPainter(
+                      captureSuccess: _documentDetected,
+                      frameRect: Rect.fromLTWH(
+                        frameLeft,
+                        frameTop,
+                        frameWidth,
+                        frameHeight,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -268,33 +301,18 @@ class _CaptureVersoPageState extends State<CaptureVersoPage>
                   ),
                 ),
                 Positioned.fill(
-                  child: Expanded(
-                    child: Center(
-                      child: SizedBox(
-                        width: frameWidth,
-                        height: frameHeight,
-                        child: CustomPaint(
-                          painter: ScanFramePainter(
-                            isSuccess: _documentDetected,
-                          ),
+                  child: Center(
+                    child: SizedBox(
+                      width: frameWidth,
+                      height: frameHeight,
+                      child: CustomPaint(
+                        painter: ScanFramePainter(
+                          isSuccess: _documentDetected,
                         ),
                       ),
                     ),
                   ),
                 ),
-
-                if (_documentDetected && !_isCapturing)
-                  Positioned(
-                    bottom: 40,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.green,
-                        strokeWidth: 6,
-                      ),
-                    ),
-                  ),
               ],
             ),
     );

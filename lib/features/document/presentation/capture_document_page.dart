@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:togoom/core/theme/app_colors.dart';
-import 'package:togoom/features/document/presentation/capture_verso_piece.dart';
 import 'package:togoom/features/document/presentation/photo_extractor.dart';
 import 'package:togoom/features/document/presentation/piece_result.dart';
 import 'package:togoom/shared/widgets/overlay_painter.dart';
@@ -13,19 +12,48 @@ import 'package:togoom/shared/utils/document_text_extractor.dart';
 import 'document_data.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
-class CaptureRectoPage extends StatefulWidget {
+enum DocumentSide { recto, verso }
+
+class CaptureDocumentPage extends StatefulWidget {
+  final DocumentSide side;
+  final DocumentData? documentData;
+
+  const CaptureDocumentPage({
+    Key? key,
+    required this.side,
+    this.documentData,
+  }) : super(key: key);
+
+  @override
+  State<CaptureDocumentPage> createState() => _CaptureDocumentPageState();
+}
+
+// Alias pour compatibilité
+class CaptureRectoPage extends StatelessWidget {
   const CaptureRectoPage({Key? key}) : super(key: key);
 
   @override
-  State<CaptureRectoPage> createState() => _CaptureRectoPageState();
+  Widget build(BuildContext context) {
+    return const CaptureDocumentPage(side: DocumentSide.recto);
+  }
 }
 
-class _CaptureRectoPageState extends State<CaptureRectoPage>
+class CaptureVersoPage extends StatelessWidget {
+  final DocumentData documentData;
+  const CaptureVersoPage({Key? key, required this.documentData}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CaptureDocumentPage(side: DocumentSide.verso, documentData: documentData);
+  }
+}
+
+class _CaptureDocumentPageState extends State<CaptureDocumentPage>
     with SingleTickerProviderStateMixin {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isProcessing = false;
-  String _statusMessage = "Placez votre pièce d'identité dans le cadre";
+  late String _statusMessage;
   late AnimationController _animationController;
   late Animation<double> _scanAnimation;
 
@@ -34,12 +62,21 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
 
   final TextRecognizer _textRecognizer = TextRecognizer();
   final DocumentDetector _documentDetector = DocumentDetector(
-    requiredDetections: 3,
+    requiredDetections: 1,
   );
+
+  bool get _isRecto => widget.side == DocumentSide.recto;
+
+  String get _title => _isRecto ? "Scanner le recto" : "Scanner le verso";
+
+  String get _initialMessage => _isRecto
+      ? "Placez votre pièce d'identité dans le cadre"
+      : "Placez le verso de votre pièce d'identité dans le cadre";
 
   @override
   void initState() {
     super.initState();
+    _statusMessage = _initialMessage;
 
     _animationController = AnimationController(
       vsync: this,
@@ -83,6 +120,7 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
       }
     } catch (e) {
       _showError("Erreur caméra : $e");
+      debugPrint("Erreur initialisation caméra : $e");
     }
   }
 
@@ -116,7 +154,9 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
   Future<void> _analyzeDocument(RecognizedText recognizedText) async {
     if (_isCapturing) return;
 
-    final result = _documentDetector.analyzeRectoDocument(recognizedText);
+    final result = _isRecto
+        ? _documentDetector.analyzeRectoDocument(recognizedText)
+        : _documentDetector.analyzeVersoDocument(recognizedText);
 
     setState(() {
       _documentDetected = result.detected;
@@ -137,35 +177,20 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
     });
 
     try {
-  await _cameraController?.stopImageStream();
-  await Future.delayed(const Duration(milliseconds: 500));
-  final XFile image = await _cameraController!.takePicture();
+      await _cameraController?.stopImageStream();
+      await Future.delayed(const Duration(milliseconds: 500));
+      final XFile image = await _cameraController!.takePicture();
 
-  final inputImage = InputImage.fromFilePath(image.path);
-  final recognizedText = await _textRecognizer.processImage(inputImage);
+      final inputImage = InputImage.fromFilePath(image.path);
+      final recognizedText = await _textRecognizer.processImage(inputImage);
 
-  final data = DocumentData();
-  data.rectoImagePath = image.path;
-
-  DocumentTextExtractor.extractRectoData(recognizedText.text, data);
-
-  debugPrint("Extraction de la photo d'identité...");
-  final photoResult = await PhotoExtractor.extractPortraitFromRecto(image.path);
-  data.portrait = photoResult?.base64Photo;
-
-  if (data.portrait != null) {
-    debugPrint(" Photo d'identité extraite avec succès");
-  } else {
-    debugPrint(" Impossible d'extraire la photo d'identité");
-  }
-
-  debugPrint(" Données extraites : ${data.toString()}");
-
-  if (mounted) {
-    _showVersoDialog(data);
-  }
-} catch (e) {
-      debugPrint(" Erreur capture : $e");
+      if (_isRecto) {
+        await _processRectoCapture(image, recognizedText);
+      } else {
+        await _processVersoCapture(image, recognizedText);
+      }
+    } catch (e) {
+      debugPrint("Erreur capture : $e");
       if (mounted) {
         _documentDetector.reset();
         setState(() {
@@ -175,6 +200,48 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
         });
         _startDocumentDetection();
       }
+    }
+  }
+
+  Future<void> _processRectoCapture(XFile image, RecognizedText recognizedText) async {
+    final data = DocumentData();
+    data.rectoImagePath = image.path;
+
+    DocumentTextExtractor.extractRectoData(recognizedText.text, data);
+
+    debugPrint("Extraction de la photo d'identité...");
+    final photoResult = await PhotoExtractor.extractPortraitFromRecto(image.path);
+    data.portrait = photoResult?.base64Photo;
+
+    if (data.portrait != null) {
+      debugPrint("Photo d'identité extraite avec succès");
+    } else {
+      debugPrint("Impossible d'extraire la photo d'identité");
+    }
+
+    debugPrint("Données extraites : ${data.toString()}");
+
+    if (mounted) {
+      _showVersoDialog(data);
+    }
+  }
+
+  Future<void> _processVersoCapture(XFile image, RecognizedText recognizedText) async {
+    final data = widget.documentData!;
+    data.versoImagePath = image.path;
+
+    DocumentTextExtractor.extractVersoData(recognizedText.text, data);
+
+    debugPrint("Verso capturé : ${image.path}");
+    debugPrint("Données verso extraites");
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OCRResultsPage(documentData: data),
+        ),
+      );
     }
   }
 
@@ -311,8 +378,10 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                       if (mounted && parentContext.mounted) {
                         Navigator.of(parentContext).pushReplacement(
                           MaterialPageRoute(
-                            builder: (context) =>
-                                CaptureVersoPage(documentData: data),
+                            builder: (context) => CaptureDocumentPage(
+                              side: DocumentSide.verso,
+                              documentData: data,
+                            ),
                           ),
                         );
                       }
@@ -399,7 +468,6 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
     final double frameHeight = size.height * frameHeightRatio;
 
     const double statusPadding = 24.0;
-    const double statusContainerHeight = 60.0;
     const double bottomPaddingRatio = 0.11;
 
     final double topOffset = 0;
@@ -415,9 +483,9 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        title: const Text(
-          "Scanner le recto",
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          _title,
+          style: const TextStyle(color: Colors.white),
         ),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -476,20 +544,32 @@ class _CaptureRectoPageState extends State<CaptureRectoPage>
                   ),
                 ),
                 Positioned.fill(
-                  child: Expanded(
-                    child: Center(
-                      child: SizedBox(
-                        width: frameWidth,
-                        height: frameHeight,
-                        child: CustomPaint(
-                          painter: ScanFramePainter(
-                            isSuccess: _documentDetected,
-                          ),
+                  child: Center(
+                    child: SizedBox(
+                      width: frameWidth,
+                      height: frameHeight,
+                      child: CustomPaint(
+                        painter: ScanFramePainter(
+                          isSuccess: _documentDetected,
                         ),
                       ),
                     ),
                   ),
                 ),
+
+                // Indicateur de chargement pour verso
+                if (!_isRecto && _documentDetected && !_isCapturing)
+                  Positioned(
+                    bottom: 40,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.green,
+                        strokeWidth: 6,
+                      ),
+                    ),
+                  ),
               ],
             ),
     );
